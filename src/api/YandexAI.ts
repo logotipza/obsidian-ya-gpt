@@ -1,3 +1,5 @@
+import { AIClient, AIMessage, AIResponse } from "./types";
+
 export interface YandexAISettings {
   apiKey: string;
   folderId: string;
@@ -8,18 +10,13 @@ export interface YandexAISettings {
   streamResponse: boolean;
 }
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant";
-  text: string;
-}
+// Keep ChatMessage alias for backward compat
+export type ChatMessage = AIMessage;
 
 export interface YandexAIResponse {
   result: {
     alternatives: Array<{
-      message: {
-        role: string;
-        text: string;
-      };
+      message: { role: string; text: string };
       status: string;
     }>;
     usage: {
@@ -32,14 +29,14 @@ export interface YandexAIResponse {
 }
 
 export const YANDEX_MODELS = [
-  { id: "yandexgpt-lite", name: "YandexGPT Lite (быстрый)", description: "Лёгкая и быстрая модель" },
-  { id: "yandexgpt", name: "YandexGPT Pro (умный)", description: "Мощная модель для сложных задач" },
-  { id: "yandexgpt-32k", name: "YandexGPT Pro 32k (длинный контекст)", description: "Для работы с большими текстами" },
-  { id: "llama-lite", name: "Llama Lite", description: "Llama в Яндекс облаке" },
-  { id: "llama", name: "Llama", description: "Llama большая модель" },
+  { id: "yandexgpt-lite", name: "YandexGPT Lite (быстрый)" },
+  { id: "yandexgpt", name: "YandexGPT Pro (умный)" },
+  { id: "yandexgpt-32k", name: "YandexGPT Pro 32k (длинный контекст)" },
+  { id: "llama-lite", name: "Llama Lite" },
+  { id: "llama", name: "Llama" },
 ];
 
-export class YandexAIClient {
+export class YandexAIClient implements AIClient {
   private settings: YandexAISettings;
   private baseUrl = "https://llm.api.cloud.yandex.net/foundationModels/v1";
 
@@ -49,21 +46,24 @@ export class YandexAIClient {
 
   private getModelUri(): string {
     const model = this.settings.modelId;
-    // Check if it's already a full URI
-    if (model.startsWith("gpt://") || model.startsWith("ds://")) {
-      return model;
+    if (model.startsWith("gpt://") || model.startsWith("ds://")) return model;
+    if (!this.settings.folderId) {
+      throw new Error("Folder ID не указан. Откройте настройки плагина.");
     }
-    // Construct URI from folder ID and model name
-    if (this.settings.folderId) {
-      return `gpt://${this.settings.folderId}/${model}/latest`;
-    }
-    return `gpt://b1g1s10eotlxdm68uy6n/${model}/latest`;
+    return `gpt://${this.settings.folderId}/${model}/latest`;
   }
 
-  async complete(messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
-    if (!this.settings.apiKey) {
-      throw new Error("API ключ не задан. Откройте настройки плагина.");
-    }
+  private getHeaders(): Record<string, string> {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Api-Key ${this.settings.apiKey}`,
+      ...(this.settings.folderId ? { "x-folder-id": this.settings.folderId } : {}),
+    };
+  }
+
+  async complete(messages: AIMessage[]): Promise<AIResponse> {
+    if (!this.settings.apiKey) throw new Error("API ключ не задан.");
+    const { requestUrl } = require("obsidian");
 
     const body = {
       modelUri: this.getModelUri(),
@@ -72,99 +72,38 @@ export class YandexAIClient {
         temperature: this.settings.temperature,
         maxTokens: String(this.settings.maxTokens),
       },
-      messages: messages.map((m) => ({ role: m.role, text: m.text })),
+      messages: messages.map((m) => ({ role: m.role, text: m.content })),
     };
 
-    const response = await fetch(`${this.baseUrl}/completion`, {
+    const response = await requestUrl({
+      url: `${this.baseUrl}/completion`,
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Api-Key ${this.settings.apiKey}`,
-        ...(this.settings.folderId ? { "x-folder-id": this.settings.folderId } : {}),
-      },
+      headers: this.getHeaders(),
       body: JSON.stringify(body),
-      signal,
+      throw: false,
     });
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       let errorText = "";
       try {
-        const err = await response.json();
-        errorText = err.message || err.error || JSON.stringify(err);
-      } catch {
-        errorText = response.statusText;
-      }
+        const err = response.json;
+        errorText = err.message || err.error?.message || JSON.stringify(err);
+      } catch { errorText = response.text || String(response.status); }
       throw new Error(`Ошибка API (${response.status}): ${errorText}`);
     }
 
-    const data: YandexAIResponse = await response.json();
+    const data: YandexAIResponse = response.json;
     const alt = data.result?.alternatives?.[0];
     if (!alt) throw new Error("Пустой ответ от API");
-    return alt.message.text;
+    return {
+      text: alt.message.text,
+      inputTokens: parseInt(data.result.usage?.inputTextTokens || "0"),
+      outputTokens: parseInt(data.result.usage?.completionTokens || "0"),
+    };
   }
 
-  async *completeStream(messages: ChatMessage[], signal?: AbortSignal): AsyncGenerator<string> {
-    if (!this.settings.apiKey) {
-      throw new Error("API ключ не задан. Откройте настройки плагина.");
-    }
-
-    const body = {
-      modelUri: this.getModelUri(),
-      completionOptions: {
-        stream: true,
-        temperature: this.settings.temperature,
-        maxTokens: String(this.settings.maxTokens),
-      },
-      messages: messages.map((m) => ({ role: m.role, text: m.text })),
-    };
-
-    const response = await fetch(`${this.baseUrl}/completion`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Api-Key ${this.settings.apiKey}`,
-        ...(this.settings.folderId ? { "x-folder-id": this.settings.folderId } : {}),
-      },
-      body: JSON.stringify(body),
-      signal,
-    });
-
-    if (!response.ok) {
-      let errorText = "";
-      try {
-        const err = await response.json();
-        errorText = err.message || err.error || JSON.stringify(err);
-      } catch {
-        errorText = response.statusText;
-      }
-      throw new Error(`Ошибка API (${response.status}): ${errorText}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error("Streaming не поддерживается");
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        try {
-          const data: YandexAIResponse = JSON.parse(trimmed);
-          const text = data.result?.alternatives?.[0]?.message?.text;
-          if (text) yield text;
-        } catch {
-          // skip malformed lines
-        }
-      }
-    }
+  async *completeStream(messages: AIMessage[]): AsyncGenerator<string> {
+    const result = await this.complete(messages);
+    yield result.text;
   }
 }

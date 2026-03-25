@@ -1,6 +1,8 @@
-import { ItemView, WorkspaceLeaf, MarkdownRenderer, Notice, setIcon } from "obsidian";
+import { ItemView, WorkspaceLeaf, MarkdownRenderer, Notice, setIcon, Editor } from "obsidian";
 import type YaGptPlugin from "../main";
-import { YandexAIClient, ChatMessage } from "../api/YandexAI";
+import { AIMessage as ChatMessage } from "../api/types";
+import { createAIClient } from "../api/factory";
+import { VaultSearch } from "../vault/VaultSearch";
 
 export const CHAT_VIEW_TYPE = "ya-gpt-chat";
 
@@ -9,6 +11,7 @@ interface StoredMessage {
   content: string;
   timestamp: number;
   error?: boolean;
+  sources?: string[]; // file paths used as context
 }
 
 export class ChatView extends ItemView {
@@ -16,6 +19,10 @@ export class ChatView extends ItemView {
   private messages: StoredMessage[] = [];
   private abortController: AbortController | null = null;
   private isLoading = false;
+  private vaultSearch: VaultSearch;
+  // Inline edit context — set when triggered from editor selection
+  private inlineEditor: Editor | null = null;
+  private inlineSelection: string | null = null;
 
   // DOM refs
   private messagesContainer: HTMLElement;
@@ -28,6 +35,7 @@ export class ChatView extends ItemView {
   constructor(leaf: WorkspaceLeaf, plugin: YaGptPlugin) {
     super(leaf);
     this.plugin = plugin;
+    this.vaultSearch = new VaultSearch(plugin.app);
   }
 
   getViewType(): string {
@@ -64,16 +72,7 @@ export class ChatView extends ItemView {
     const headerLeft = header.createDiv("yagpt-chat-header-left");
 
     const logo = headerLeft.createDiv("yagpt-logo");
-    logo.innerHTML = `<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="14" fill="url(#yagpt-grad)"/>
-      <path d="M8 10h12M8 14h8M8 18h10" stroke="white" stroke-width="2" stroke-linecap="round"/>
-      <defs>
-        <linearGradient id="yagpt-grad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#FF4545"/>
-          <stop offset="1" stop-color="#FF7844"/>
-        </linearGradient>
-      </defs>
-    </svg>`;
+    logo.createEl("span", { text: "Я", cls: "yagpt-logo-letter" });
 
     const titleBlock = headerLeft.createDiv("yagpt-header-title-block");
     titleBlock.createEl("span", { text: "Ya GPT", cls: "yagpt-header-title" });
@@ -82,15 +81,40 @@ export class ChatView extends ItemView {
 
     const headerActions = header.createDiv("yagpt-chat-header-actions");
 
+    // Vault search button
+    const vaultBtn = headerActions.createEl("button", {
+      cls: "yagpt-icon-btn",
+      attr: { title: "Поиск по всему vault", "aria-label": "Vault" },
+    });
+    setIcon(vaultBtn, "database");
+    vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
+    vaultBtn.addEventListener("click", async () => {
+      this.plugin.settings.vaultSearchEnabled = !this.plugin.settings.vaultSearchEnabled;
+      // Выключаем одиночный контекст если включаем vault
+      if (this.plugin.settings.vaultSearchEnabled) {
+        this.plugin.settings.includeNoteContext = false;
+        noteCtxBtn.toggleClass("yagpt-active", false);
+      }
+      vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
+      await this.plugin.saveSettings();
+      const state = this.plugin.settings.vaultSearchEnabled ? "включён" : "выключен";
+      new Notice(`Поиск по Vault ${state}`);
+    });
+
     // Include note toggle button
     const noteCtxBtn = headerActions.createEl("button", {
       cls: "yagpt-icon-btn",
-      attr: { title: "Включить/выключить контекст заметки", "aria-label": "Контекст заметки" },
+      attr: { title: "Контекст текущей заметки", "aria-label": "Контекст заметки" },
     });
     setIcon(noteCtxBtn, "file-text");
     noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
     noteCtxBtn.addEventListener("click", async () => {
       this.plugin.settings.includeNoteContext = !this.plugin.settings.includeNoteContext;
+      // Выключаем vault если включаем одиночный контекст
+      if (this.plugin.settings.includeNoteContext) {
+        this.plugin.settings.vaultSearchEnabled = false;
+        vaultBtn.toggleClass("yagpt-active", false);
+      }
       noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
       await this.plugin.saveSettings();
       const state = this.plugin.settings.includeNoteContext ? "включён" : "выключен";
@@ -184,16 +208,7 @@ export class ChatView extends ItemView {
 
     const welcome = this.messagesContainer.createDiv("yagpt-welcome");
     const logo = welcome.createDiv("yagpt-welcome-logo");
-    logo.innerHTML = `<svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="28" cy="28" r="28" fill="url(#wg)"/>
-      <path d="M15 21h26M15 28h18M15 35h22" stroke="white" stroke-width="3" stroke-linecap="round"/>
-      <defs>
-        <linearGradient id="wg" x1="0" y1="0" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#FF4545"/>
-          <stop offset="1" stop-color="#FF7844"/>
-        </linearGradient>
-      </defs>
-    </svg>`;
+    logo.createEl("span", { text: "Я", cls: "yagpt-welcome-logo-letter" });
     welcome.createEl("h2", { text: "Ya GPT", cls: "yagpt-welcome-title" });
     welcome.createEl("p", { text: "Яндекс AI прямо в Obsidian", cls: "yagpt-welcome-subtitle" });
 
@@ -217,15 +232,14 @@ export class ChatView extends ItemView {
   }
 
   private updateModelBadge(): void {
-    const modelId = this.plugin.settings.modelId;
-    const names: Record<string, string> = {
-      "yandexgpt-lite": "GPT Lite",
-      "yandexgpt": "GPT Pro",
-      "yandexgpt-32k": "GPT 32k",
-      "llama-lite": "Llama Lite",
-      "llama": "Llama",
+    const p = this.plugin.settings.provider;
+    const badges: Record<string, string> = {
+      yandex: this.plugin.settings.modelId.replace("yandexgpt", "YaGPT").replace("-lite", " Lite").replace("-32k", " 32k"),
+      groq: this.plugin.settings.groqModel.split("-").slice(0, 3).join(" "),
+      openai: this.plugin.settings.openaiModel,
+      anthropic: this.plugin.settings.anthropicModel.split("-").slice(0, 2).join(" "),
     };
-    this.modelBadge.setText(names[modelId] || modelId);
+    this.modelBadge.setText(badges[p] || p);
   }
 
   private async handleSend(): Promise<void> {
@@ -253,30 +267,51 @@ export class ChatView extends ItemView {
     this.setLoading(true);
 
     try {
-      const apiMessages = this.buildApiMessages();
-      const client = new YandexAIClient(this.plugin.settings);
+      if (this.plugin.settings.vaultSearchEnabled) {
+        this.showStatus("🔍 Ищу в заметках...");
+      }
+      const { messages: apiMessages, sources } = await this.buildApiMessages();
+      this.showStatus("");
+      const client = createAIClient(this.plugin.settings);
       this.abortController = new AbortController();
 
-      const assistantMsg: StoredMessage = { role: "assistant", content: "", timestamp: Date.now() };
+      const assistantMsg: StoredMessage = { role: "assistant", content: "", timestamp: Date.now(), sources };
       this.messages.push(assistantMsg);
       const msgEl = this.renderMessage(assistantMsg);
       const contentEl = msgEl.querySelector(".yagpt-msg-content") as HTMLElement;
 
       if (this.plugin.settings.streamResponse) {
         let fullText = "";
-        const stream = client.completeStream(apiMessages, this.abortController.signal);
+        const stream = client.completeStream(apiMessages);
         for await (const chunk of stream) {
-          fullText = chunk; // Yandex returns full text each chunk
+          fullText = chunk;
           assistantMsg.content = fullText;
           contentEl.empty();
           await MarkdownRenderer.render(this.app, fullText, contentEl, "", this);
           this.scrollToBottom();
         }
       } else {
-        const reply = await client.complete(apiMessages, this.abortController.signal);
-        assistantMsg.content = reply;
+        const reply = await client.complete(apiMessages);
+        assistantMsg.content = reply.text;
         contentEl.empty();
-        await MarkdownRenderer.render(this.app, reply, contentEl, "", this);
+        await MarkdownRenderer.render(this.app, reply.text, contentEl, "", this);
+        if (this.plugin.settings.showTokenCount && (reply.inputTokens || reply.outputTokens)) {
+          this.showStatus(`🔢 Токены: ${reply.inputTokens} вход · ${reply.outputTokens} выход · ${reply.inputTokens + reply.outputTokens} итого`);
+        }
+      }
+
+      // If inline edit mode — show replace button
+      if (this.inlineEditor && this.inlineSelection) {
+        const bubble = msgEl.querySelector(".yagpt-msg-bubble") as HTMLElement;
+        if (bubble) {
+          const finalText = assistantMsg.content;
+          const capturedEditor = this.inlineEditor;
+          const capturedSelection = this.inlineSelection;
+          this.renderReplaceButton(bubble, finalText, capturedEditor, capturedSelection);
+        }
+        // Reset inline context
+        this.inlineEditor = null;
+        this.inlineSelection = null;
       }
 
       this.scrollToBottom();
@@ -310,43 +345,83 @@ export class ChatView extends ItemView {
     }
   }
 
-  private buildApiMessages(): ChatMessage[] {
+  private async buildApiMessages(): Promise<{ messages: ChatMessage[]; sources: string[] }> {
     const msgs: ChatMessage[] = [];
+    const sources: string[] = [];
 
-    // System prompt
     let systemText = this.plugin.settings.systemPrompt;
+    const lastMsg = this.messages[this.messages.length - 1];
+    const userQuery = lastMsg?.role === "user" ? lastMsg.content : "";
 
-    // Include note context if enabled
+    // Vault-wide context with relevance search
+    if (this.plugin.settings.vaultSearchEnabled) {
+      const files = this.app.vault.getMarkdownFiles();
+      const scored: Array<{ path: string; content: string; score: number }> = [];
+
+      const keywords = userQuery
+        .toLowerCase()
+        .replace(/[^\wа-яё\s]/gi, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2);
+
+      for (const file of files) {
+        const content = await this.app.vault.cachedRead(file);
+        if (!content.trim()) continue;
+
+        // Score by keyword hits in path + content
+        let score = 0;
+        const haystack = (file.path + " " + content).toLowerCase();
+        for (const kw of keywords) {
+          if (file.path.toLowerCase().includes(kw)) score += 5;
+          const matches = haystack.match(new RegExp(kw, "gi"));
+          if (matches) score += Math.min(matches.length, 10);
+        }
+        scored.push({ path: file.path, content, score });
+      }
+
+      // Sort by relevance, take top N, but always include at least some notes
+      scored.sort((a, b) => b.score - a.score);
+      const maxResults = this.plugin.settings.vaultSearchResults;
+      const topScored = scored.filter((f) => f.score > 0).slice(0, maxResults);
+      // If nothing matched — include all notes (fallback)
+      const toInclude = topScored.length > 0 ? topScored : scored.slice(0, 20);
+
+      const parts: string[] = [];
+      for (const item of toInclude) {
+        sources.push(item.path);
+        parts.push(`### ${item.path}\n${item.content.slice(0, 2000)}`);
+      }
+
+      new Notice(`📂 Загружено заметок: ${parts.length}`, 3000);
+      systemText += `\n\n⚠️ ВАЖНО: Ниже предоставлены реальные заметки из Obsidian Vault пользователя. Ты ИМЕЕШЬ доступ к этим данным прямо сейчас — они уже здесь, в этом сообщении. НИКОГДА не говори "у меня нет доступа к вашим заметкам". Используй эти заметки чтобы отвечать на вопросы. Путь к файлу показывает папку и название (например "Тильда/Заметка.md" = папка "Тильда"). Заметки:\n\n${parts.join("\n\n---\n\n")}`;
+    }
+
+    // Single note context
     if (this.plugin.settings.includeNoteContext) {
       const activeFile = this.app.workspace.getActiveFile();
       if (activeFile) {
-        const cache = this.app.metadataCache.getFileCache(activeFile);
-        void this.app.vault.cachedRead(activeFile).then((content) => {
-          systemText += `\n\n${this.plugin.settings.contextNotePrefix}${content}`;
-        });
-        // Synchronous approximation — we read it in the main flow
+        const content = await this.app.vault.cachedRead(activeFile);
+        sources.push(activeFile.path);
+        systemText += `\n\n${this.plugin.settings.contextNotePrefix}**${activeFile.name}**:\n\n${content}`;
       }
     }
 
-    msgs.push({ role: "system", text: systemText });
+    msgs.push({ role: "system", content: systemText });
 
-    // Add conversation history (limited)
+    // Conversation history
     const maxHistory = this.plugin.settings.maxHistoryLength;
-    const history = this.messages.slice(-(maxHistory + 1), -1); // exclude last user message which we'll add
-
+    const history = this.messages.slice(-(maxHistory + 1), -1);
     for (const m of history) {
       if (!m.error) {
-        msgs.push({ role: m.role, text: m.content });
+        msgs.push({ role: m.role, content: m.content });
       }
     }
 
-    // Last user message
-    const lastMsg = this.messages[this.messages.length - 1];
-    if (lastMsg.role === "user") {
-      msgs.push({ role: "user", text: lastMsg.content });
+    if (userQuery) {
+      msgs.push({ role: "user", content: userQuery });
     }
 
-    return msgs;
+    return { messages: msgs, sources };
   }
 
   private renderMessage(msg: StoredMessage): HTMLElement {
@@ -354,13 +429,7 @@ export class ChatView extends ItemView {
 
     if (msg.role === "assistant") {
       const avatar = wrapper.createDiv("yagpt-avatar");
-      avatar.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="10" fill="url(#ag)"/>
-        <path d="M5 7.5h10M5 10h7M5 12.5h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <defs><linearGradient id="ag" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#FF4545"/><stop offset="1" stop-color="#FF7844"/>
-        </linearGradient></defs>
-      </svg>`;
+      avatar.createEl("span", { text: "Я", cls: "yagpt-avatar-letter" });
     }
 
     const bubble = wrapper.createDiv("yagpt-msg-bubble");
@@ -392,9 +461,60 @@ export class ChatView extends ItemView {
 
       const timeEl = actions.createEl("span", { cls: "yagpt-msg-time" });
       timeEl.setText(this.formatTime(msg.timestamp));
+
+      // Sources from history
+      if (msg.sources && msg.sources.length > 0) {
+        this.renderSources(bubble, msg.sources);
+      }
     }
 
     return wrapper;
+  }
+
+  private renderReplaceButton(bubble: HTMLElement, newText: string, editor: Editor, originalSelection: string): void {
+    const replaceBar = bubble.createDiv("yagpt-replace-bar");
+
+    const previewEl = replaceBar.createDiv("yagpt-replace-preview");
+    previewEl.createEl("span", { text: "Заменит: ", cls: "yagpt-replace-label" });
+    previewEl.createEl("span", {
+      text: `"${originalSelection.slice(0, 60)}${originalSelection.length > 60 ? "…" : ""}"`,
+      cls: "yagpt-replace-original",
+    });
+
+    const btns = replaceBar.createDiv("yagpt-replace-btns");
+
+    const replaceBtn = btns.createEl("button", { cls: "yagpt-replace-btn yagpt-replace-btn--confirm" });
+    setIcon(replaceBtn, "check");
+    replaceBtn.createEl("span", { text: "Заменить в заметке" });
+    replaceBtn.addEventListener("click", () => {
+      // Strip markdown for clean replacement if needed, use raw text
+      editor.replaceSelection(newText);
+      new Notice("✅ Текст заменён в заметке");
+      replaceBar.remove();
+    });
+
+    const dismissBtn = btns.createEl("button", { cls: "yagpt-replace-btn yagpt-replace-btn--dismiss" });
+    setIcon(dismissBtn, "x");
+    dismissBtn.createEl("span", { text: "Не заменять" });
+    dismissBtn.addEventListener("click", () => {
+      replaceBar.remove();
+    });
+  }
+
+  private renderSources(msgEl: HTMLElement, sources: string[]): void {
+    const sourcesEl = msgEl.createDiv("yagpt-sources");
+    sourcesEl.createEl("span", { text: "Источники:", cls: "yagpt-sources-label" });
+    const list = sourcesEl.createDiv("yagpt-sources-list");
+    for (const path of sources) {
+      const name = path.split("/").pop()?.replace(/\.md$/, "") || path;
+      const link = list.createEl("button", { cls: "yagpt-source-link" });
+      link.createEl("span", { text: "📄", cls: "yagpt-source-icon" });
+      link.createEl("span", { text: name, cls: "yagpt-source-name" });
+      link.setAttribute("title", path);
+      link.addEventListener("click", () => {
+        this.app.workspace.openLinkText(path, "", false);
+      });
+    }
   }
 
   private async insertIntoNote(text: string): Promise<void> {
@@ -421,13 +541,7 @@ export class ChatView extends ItemView {
       // Add typing indicator
       const typingEl = this.messagesContainer.createDiv("yagpt-typing yagpt-msg-wrapper yagpt-msg-assistant");
       const avatar = typingEl.createDiv("yagpt-avatar");
-      avatar.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <circle cx="10" cy="10" r="10" fill="url(#tg)"/>
-        <path d="M5 7.5h10M5 10h7M5 12.5h8" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
-        <defs><linearGradient id="tg" x1="0" y1="0" x2="20" y2="20" gradientUnits="userSpaceOnUse">
-          <stop stop-color="#FF4545"/><stop offset="1" stop-color="#FF7844"/>
-        </linearGradient></defs>
-      </svg>`;
+      avatar.createEl("span", { text: "Я", cls: "yagpt-avatar-letter" });
       const bubble = typingEl.createDiv("yagpt-msg-bubble");
       const dots = bubble.createDiv("yagpt-typing-dots");
       dots.createDiv("yagpt-dot");
@@ -450,6 +564,15 @@ export class ChatView extends ItemView {
     if (this.plugin.settings.saveHistory) {
       this.saveHistory();
     }
+  }
+
+  private showStatus(text: string): void {
+    if (!text) {
+      this.statusBar.style.display = "none";
+      return;
+    }
+    this.statusBar.setText(text);
+    this.statusBar.style.display = "";
   }
 
   private scrollToBottom(): void {
@@ -488,5 +611,16 @@ export class ChatView extends ItemView {
   // Called from plugin when settings change
   refreshSettings(): void {
     this.updateModelBadge();
+  }
+
+  // Set inline edit context from editor selection
+  setInlineEditContext(editor: Editor, selection: string): void {
+    this.inlineEditor = editor;
+    this.inlineSelection = selection;
+  }
+
+  // Programmatically send the current input
+  triggerSend(): void {
+    this.handleSend();
   }
 }

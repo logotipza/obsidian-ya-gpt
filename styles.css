@@ -51,6 +51,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4545, #ff7844);
+}
+
+.yagpt-logo-letter {
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.yagpt-welcome-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4545, #ff7844);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.yagpt-welcome-logo-letter {
+  color: white;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.yagpt-avatar-letter {
+  color: white;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .yagpt-header-title-block {
@@ -240,6 +276,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
+  background: linear-gradient(135deg, #ff4545, #ff7844);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,6 +423,148 @@
   color: var(--text-faint);
   padding: 0 4px;
   margin-left: auto;
+}
+
+/* ================================================================
+   INLINE REPLACE BAR
+   ================================================================ */
+.yagpt-replace-bar {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, rgba(255,69,69,0.06), rgba(255,120,68,0.06));
+  border: 1px solid rgba(255, 69, 69, 0.25);
+  border-radius: var(--yagpt-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.yagpt-replace-preview {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.yagpt-replace-label {
+  font-weight: 600;
+  color: var(--yagpt-accent);
+}
+
+.yagpt-replace-original {
+  font-style: italic;
+  color: var(--text-faint);
+}
+
+.yagpt-replace-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yagpt-replace-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: var(--yagpt-radius-sm);
+  border: none;
+  font-size: 13px;
+  font-family: var(--font-interface);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.yagpt-replace-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.yagpt-replace-btn--confirm {
+  background: var(--yagpt-accent-gradient);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 69, 69, 0.25);
+}
+
+.yagpt-replace-btn--confirm:hover {
+  box-shadow: 0 4px 12px rgba(255, 69, 69, 0.35);
+}
+
+.yagpt-replace-btn--dismiss {
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+}
+
+.yagpt-replace-btn--dismiss:hover {
+  color: var(--text-normal);
+}
+
+/* ================================================================
+   SOURCES
+   ================================================================ */
+.yagpt-sources {
+  margin-top: 6px;
+  padding: 8px 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--yagpt-radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.yagpt-sources-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+}
+
+.yagpt-sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.yagpt-source-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-interface);
+  max-width: 200px;
+}
+
+.yagpt-source-link:hover {
+  border-color: var(--yagpt-accent);
+  background: rgba(255, 69, 69, 0.06);
+}
+
+.yagpt-source-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.yagpt-source-name {
+  font-size: 11px;
+  color: var(--text-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ================================================================
@@ -562,12 +741,13 @@
    STATUS BAR
    ================================================================ */
 .yagpt-status-bar {
-  padding: 4px 12px;
+  padding: 5px 12px;
   background: var(--background-secondary);
   border-top: 1px solid var(--background-modifier-border);
   font-size: 11px;
   color: var(--text-muted);
   text-align: center;
+  letter-spacing: 0.2px;
 }
 
 /* ================================================================
@@ -612,6 +792,45 @@
   white-space: nowrap;
 }
 
+.yagpt-settings-info {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: var(--background-secondary);
+  border-radius: var(--yagpt-radius-sm);
+  border-left: 3px solid var(--yagpt-accent, #ff4545);
+}
+
+.yagpt-settings-info p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.yagpt-settings-info p:last-child {
+  margin-bottom: 0;
+}
+
+.yagpt-settings-info a {
+  color: var(--yagpt-accent, #ff4545);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.yagpt-settings-info a:hover {
+  text-decoration: underline;
+}
+
+.yagpt-settings-steps {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.yagpt-settings-steps li {
+  margin: 3px 0;
+}
+
 .yagpt-settings-footer {
   margin-top: 32px;
   padding-top: 16px;
@@ -636,10 +855,138 @@
 }
 
 /* ================================================================
-   RESPONSIVE
+   LAYOUT SAFETY — всегда, на любой ширине
    ================================================================ */
+.yagpt-msg-wrapper {
+  min-width: 0;
+}
+
+.yagpt-msg-bubble {
+  min-width: 0;
+  max-width: calc(100% - 36px);
+  overflow: hidden;
+}
+
+.yagpt-msg-content {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+.yagpt-msg-content pre {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.yagpt-input-wrapper {
+  min-width: 0;
+}
+
+.yagpt-textarea {
+  min-width: 0;
+  width: 100%;
+}
+
+.yagpt-source-link {
+  max-width: 180px;
+  min-width: 0;
+}
+
+.yagpt-source-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ================================================================
+   RESPONSIVE — узкие панели (< 300px)
+   ================================================================ */
+@container (max-width: 300px) {
+  .yagpt-suggestions { display: none; }
+}
+
 @media (max-width: 300px) {
-  .yagpt-suggestions {
-    display: none;
-  }
+  .yagpt-chat-header { padding: 8px 10px; gap: 4px; }
+  .yagpt-logo { width: 24px; height: 24px; }
+  .yagpt-logo-letter { font-size: 12px; }
+  .yagpt-header-title { font-size: 13px; }
+  .yagpt-model-badge { display: none; }
+  .yagpt-icon-btn { width: 28px; height: 28px; }
+  .yagpt-icon-btn svg { width: 14px; height: 14px; }
+  .yagpt-messages { padding: 8px 6px; gap: 10px; }
+  .yagpt-input-area { padding: 8px 6px 6px; }
+  .yagpt-msg-content { font-size: 12.5px; padding: 8px 10px; }
+  .yagpt-avatar { width: 22px; height: 22px; }
+  .yagpt-avatar-letter { font-size: 10px; }
+  .yagpt-msg-bubble { max-width: calc(100% - 28px); }
+  .yagpt-welcome { padding: 20px 12px; }
+  .yagpt-welcome-logo { width: 40px; height: 40px; }
+  .yagpt-welcome-logo-letter { font-size: 20px; }
+  .yagpt-welcome-title { font-size: 18px; }
+  .yagpt-suggestions { display: none; }
+  .yagpt-input-hint { display: none; }
+}
+
+/* ================================================================
+   МОБИЛКА (Obsidian mobile)
+   ================================================================ */
+.is-mobile .yagpt-messages {
+  padding: 12px 10px;
+}
+
+.is-mobile .yagpt-msg-content {
+  font-size: 15px;
+  padding: 10px 14px;
+}
+
+.is-mobile .yagpt-textarea {
+  font-size: 16px; /* iOS: prevents auto-zoom */
+}
+
+.is-mobile .yagpt-input-area {
+  padding: 10px 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
+
+.is-mobile .yagpt-input-wrapper {
+  padding: 10px 10px 10px 14px;
+}
+
+.is-mobile .yagpt-send-btn,
+.is-mobile .yagpt-stop-btn {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.is-mobile .yagpt-icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.is-mobile .yagpt-chat-header {
+  padding: 12px 14px;
+}
+
+.is-mobile .yagpt-suggestion-chip {
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.is-mobile .yagpt-replace-bar {
+  padding: 12px 14px;
+}
+
+.is-mobile .yagpt-action-btn {
+  width: 30px;
+  height: 30px;
+  opacity: 1; /* всегда видны на мобилке */
+}
+
+.is-mobile .yagpt-msg-actions {
+  opacity: 1; /* всегда видны (нет hover на тач) */
+}
+
+.is-mobile .yagpt-input-hint {
+  display: none; /* не нужна подсказка про Ctrl+Enter */
 }
