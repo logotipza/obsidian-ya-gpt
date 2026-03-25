@@ -1,0 +1,645 @@
+/* ================================================================
+   Ya GPT Plugin Styles
+   ================================================================ */
+
+/* ---- Root Variables ---- */
+.yagpt-chat-root {
+  --yagpt-accent: #ff4545;
+  --yagpt-accent-2: #ff7844;
+  --yagpt-accent-gradient: linear-gradient(135deg, #ff4545, #ff7844);
+  --yagpt-radius: 12px;
+  --yagpt-radius-sm: 8px;
+  --yagpt-radius-lg: 18px;
+  --yagpt-user-bg: var(--interactive-accent);
+  --yagpt-user-text: var(--text-on-accent);
+  --yagpt-ai-bg: var(--background-secondary);
+  --yagpt-ai-border: var(--background-modifier-border);
+  --yagpt-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --yagpt-shadow-lg: 0 4px 24px rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--background-primary);
+  font-family: var(--font-interface);
+}
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+.yagpt-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.yagpt-chat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.yagpt-logo {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.yagpt-header-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.yagpt-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-normal);
+  letter-spacing: -0.2px;
+}
+
+.yagpt-model-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--yagpt-accent-gradient);
+  color: white;
+  padding: 2px 7px;
+  border-radius: 20px;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.yagpt-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.yagpt-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--yagpt-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.yagpt-icon-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.yagpt-icon-btn.yagpt-active {
+  background: rgba(255, 69, 69, 0.12);
+  color: var(--yagpt-accent);
+}
+
+.yagpt-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ================================================================
+   MESSAGES AREA
+   ================================================================ */
+.yagpt-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scroll-behavior: smooth;
+}
+
+.yagpt-messages::-webkit-scrollbar {
+  width: 4px;
+}
+
+.yagpt-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.yagpt-messages::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+/* ================================================================
+   WELCOME SCREEN
+   ================================================================ */
+.yagpt-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.yagpt-welcome-logo {
+  margin-bottom: 8px;
+  opacity: 0.95;
+}
+
+.yagpt-welcome-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-normal);
+  margin: 0;
+  background: var(--yagpt-accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.yagpt-welcome-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 16px;
+}
+
+.yagpt-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.yagpt-suggestion-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: var(--font-interface);
+}
+
+.yagpt-suggestion-chip:hover {
+  border-color: var(--yagpt-accent);
+  background: rgba(255, 69, 69, 0.06);
+  transform: translateY(-1px);
+  box-shadow: var(--yagpt-shadow);
+}
+
+.yagpt-chip-icon {
+  font-size: 14px;
+}
+
+/* ================================================================
+   MESSAGE BUBBLES
+   ================================================================ */
+.yagpt-msg-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  animation: yagpt-slide-in 0.2s ease;
+}
+
+@keyframes yagpt-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.yagpt-msg-user {
+  flex-direction: row-reverse;
+}
+
+.yagpt-avatar {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.yagpt-msg-bubble {
+  max-width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.yagpt-msg-content {
+  padding: 10px 14px;
+  border-radius: var(--yagpt-radius-lg);
+  font-size: 13.5px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* User bubble */
+.yagpt-msg-user .yagpt-msg-content {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-bottom-right-radius: 4px;
+}
+
+/* Assistant bubble */
+.yagpt-msg-assistant .yagpt-msg-content {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  border-bottom-left-radius: 4px;
+}
+
+/* Markdown in assistant messages */
+.yagpt-msg-assistant .yagpt-msg-content p {
+  margin: 0 0 8px;
+}
+.yagpt-msg-assistant .yagpt-msg-content p:last-child {
+  margin-bottom: 0;
+}
+.yagpt-msg-assistant .yagpt-msg-content ul,
+.yagpt-msg-assistant .yagpt-msg-content ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.yagpt-msg-assistant .yagpt-msg-content li {
+  margin: 2px 0;
+}
+.yagpt-msg-assistant .yagpt-msg-content code {
+  background: var(--background-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--font-monospace);
+}
+.yagpt-msg-assistant .yagpt-msg-content pre {
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--yagpt-radius-sm);
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+.yagpt-msg-assistant .yagpt-msg-content pre code {
+  background: none;
+  padding: 0;
+  font-size: 12px;
+}
+.yagpt-msg-assistant .yagpt-msg-content h1,
+.yagpt-msg-assistant .yagpt-msg-content h2,
+.yagpt-msg-assistant .yagpt-msg-content h3 {
+  margin: 8px 0 4px;
+  color: var(--text-normal);
+}
+.yagpt-msg-assistant .yagpt-msg-content blockquote {
+  border-left: 3px solid var(--yagpt-accent);
+  margin: 8px 0;
+  padding: 4px 12px;
+  color: var(--text-muted);
+}
+.yagpt-msg-assistant .yagpt-msg-content table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  margin: 8px 0;
+}
+.yagpt-msg-assistant .yagpt-msg-content th,
+.yagpt-msg-assistant .yagpt-msg-content td {
+  border: 1px solid var(--background-modifier-border);
+  padding: 6px 10px;
+}
+.yagpt-msg-assistant .yagpt-msg-content th {
+  background: var(--background-primary);
+  font-weight: 600;
+}
+.yagpt-msg-assistant .yagpt-msg-content strong {
+  color: var(--text-normal);
+}
+
+/* Message actions */
+.yagpt-msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.yagpt-msg-wrapper:hover .yagpt-msg-actions {
+  opacity: 1;
+}
+
+.yagpt-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.yagpt-action-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.yagpt-action-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.yagpt-msg-time {
+  font-size: 10px;
+  color: var(--text-faint);
+  padding: 0 4px;
+  margin-left: auto;
+}
+
+/* ================================================================
+   TYPING INDICATOR
+   ================================================================ */
+.yagpt-typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+}
+
+.yagpt-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: yagpt-bounce 1.2s ease-in-out infinite;
+}
+
+.yagpt-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.yagpt-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes yagpt-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* ================================================================
+   INPUT AREA
+   ================================================================ */
+.yagpt-input-area {
+  padding: 12px 12px 8px;
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  flex-shrink: 0;
+}
+
+.yagpt-input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--yagpt-radius);
+  padding: 8px 8px 8px 12px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.yagpt-input-wrapper:focus-within {
+  border-color: var(--yagpt-accent);
+  box-shadow: 0 0 0 2px rgba(255, 69, 69, 0.12);
+}
+
+.yagpt-textarea {
+  flex: 1;
+  border: none;
+  background: transparent;
+  resize: none;
+  font-family: var(--font-interface);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-normal);
+  outline: none;
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.yagpt-textarea::placeholder {
+  color: var(--text-faint);
+}
+
+.yagpt-textarea::-webkit-scrollbar {
+  width: 3px;
+}
+
+.yagpt-textarea::-webkit-scrollbar-thumb {
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+}
+
+.yagpt-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.yagpt-send-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--yagpt-radius-sm);
+  border: none;
+  background: var(--yagpt-accent-gradient);
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(255, 69, 69, 0.3);
+}
+
+.yagpt-send-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 69, 69, 0.4);
+}
+
+.yagpt-send-btn:active {
+  transform: translateY(0);
+}
+
+.yagpt-send-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.yagpt-stop-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--yagpt-radius-sm);
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  animation: yagpt-pulse 1.5s ease-in-out infinite;
+}
+
+.yagpt-stop-btn:hover {
+  border-color: var(--yagpt-accent);
+  color: var(--yagpt-accent);
+}
+
+.yagpt-stop-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes yagpt-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 69, 69, 0.2); }
+  50% { box-shadow: 0 0 0 4px rgba(255, 69, 69, 0); }
+}
+
+.yagpt-input-hint {
+  text-align: center;
+  margin-top: 6px;
+}
+
+.yagpt-input-hint span {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+/* ================================================================
+   STATUS BAR
+   ================================================================ */
+.yagpt-status-bar {
+  padding: 4px 12px;
+  background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border);
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ================================================================
+   SETTINGS STYLES
+   ================================================================ */
+.yagpt-settings-header {
+  margin-bottom: 24px;
+}
+
+.yagpt-settings-header h1 {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  background: var(--yagpt-accent-gradient, linear-gradient(135deg, #ff4545, #ff7844));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.yagpt-settings-subtitle {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 13px;
+}
+
+.yagpt-settings-section {
+  margin-top: 8px;
+}
+
+.yagpt-settings-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin: 24px 0 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.yagpt-test-btn {
+  white-space: nowrap;
+}
+
+.yagpt-settings-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.yagpt-settings-footer-text {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+/* ================================================================
+   DARK THEME ADJUSTMENTS
+   ================================================================ */
+.theme-dark .yagpt-msg-assistant .yagpt-msg-content {
+  background: var(--background-secondary-alt, rgba(255, 255, 255, 0.04));
+}
+
+.theme-dark .yagpt-send-btn {
+  box-shadow: 0 2px 8px rgba(255, 69, 69, 0.2);
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 300px) {
+  .yagpt-suggestions {
+    display: none;
+  }
+}

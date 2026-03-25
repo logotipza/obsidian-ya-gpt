@@ -1,0 +1,11 @@
+{
+  "id": "obsidian-ya-gpt",
+  "name": "Ya GPT — Яндекс AI",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Чат с YandexGPT прямо в Obsidian. Используйте мощь Яндекс AI Studio для работы с вашими заметками.",
+  "author": "logotipza",
+  "authorUrl": "https://github.com/logotipza",
+  "fundingUrl": "",
+  "isDesktopOnly": false
+}
