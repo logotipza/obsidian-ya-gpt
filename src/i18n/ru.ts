@@ -123,6 +123,17 @@ export default {
   sectionAnthropic: "🔑 Anthropic Claude",
   anthropicLink: "→ Получить API ключ на console.anthropic.com",
 
+  // GigaChat
+  sectionGigaChat: "🔑 GigaChat (Сбер)",
+  gigachatInfo: "GigaChat — языковая модель от Сбера. Требует авторизационный ключ из личного кабинета.",
+  gigachatLink: "→ Получить доступ на developers.sber.ru/portal/products/gigachat-api",
+  gigachatStep1: "Зайдите на developers.sber.ru и авторизуйтесь через Сбер ID",
+  gigachatStep2: "Создайте проект и подключите GigaChat API",
+  gigachatStep3: "В разделе «Авторизационные данные» скопируйте Authorization Key",
+  gigachatStep4: "Вставьте ключ сюда",
+  gigachatAuthKeyLabel: "Authorization Key",
+  gigachatAuthKeyDesc: "Ключ из раздела авторизационных данных вашего проекта на developers.sber.ru",
+
   // System prompt default
   defaultSystemPrompt: "Ты умный и полезный ассистент. Отвечай на русском языке, если не сказано иначе. Будь точным, структурированным и помогай пользователю эффективно работать с заметками.",
 

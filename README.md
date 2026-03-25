@@ -1,138 +1,150 @@
-# Ya GPT — AI Ассистент для Obsidian
+# Ya GPT — AI Assistant for Obsidian
 
-Мощный плагин для Obsidian с поддержкой нескольких AI провайдеров: **Яндекс AI Studio**, **Groq (бесплатно)**, **OpenAI**, **Anthropic Claude**.
-
----
-
-## Возможности
-
-- 💬 **Чат-панель** — полноценный чат в боковой панели, история между сессиями
-- 🗄️ **Поиск по Vault** — AI находит релевантные заметки и отвечает на основе них
-- 📄 **Контекст заметки** — добавить текущую заметку в контекст одной кнопкой
-- ✂️ **Inline редактирование** — выдели текст → правый клик → перевести / сократить / улучшить
-- 🔄 **Замена текста** — после ответа AI предлагает заменить выделенный текст
-- 📋 **Источники** — показывает какие заметки использовал AI, кликабельные ссылки
-- 📱 **Мобильная версия** — адаптивный дизайн для Obsidian Mobile
-- 🎨 **Тёмная/светлая тема** — автоматически адаптируется
+A powerful Obsidian plugin with multi-provider AI support: **Yandex AI Studio**, **Groq (free)**, **OpenAI**, **Anthropic Claude**, **GigaChat (Sber)**.
 
 ---
 
-## Поддерживаемые провайдеры
+## Features
 
-| Провайдер | Стоимость | Модели |
-|-----------|-----------|--------|
-| **Groq** | 🆓 Бесплатно | Llama 3.3 70B, Mixtral 8x7B, Gemma 2 |
-| **Яндекс AI** | Платно | YandexGPT Pro/Lite/32k, Llama |
-| **OpenAI** | Платно | GPT-4o, GPT-4o mini, GPT-3.5 |
-| **Anthropic** | Платно | Claude Opus/Sonnet/Haiku |
+- 💬 **Chat panel** — full chat in the sidebar with persistent history between sessions
+- 🗄️ **Vault search** — AI finds relevant notes and answers based on them (RAG)
+- 📅 **Date-aware search** — ask "what did I write on April 12th?" and AI uses note creation/modification dates
+- 📄 **Note context** — add the current note to context with one click
+- ✂️ **Inline editing** — select text → right-click → translate / shorten / improve / explain
+- 🔄 **Text replacement** — after AI responds, it offers to replace the selected text in your note
+- 📋 **Sources** — shows which notes AI used, with clickable links to open them
+- 🔗 **Clickable note references** — note.md links in AI responses open directly in Obsidian
+- 📱 **Mobile support** — adaptive layout for Obsidian Mobile
+- 🎨 **Dark/light theme** — adapts automatically to your Obsidian theme
+- 🌍 **Bilingual UI** — Russian and English interface based on your Obsidian language setting
 
 ---
 
-## Установка
+## Supported Providers
 
-### Через BRAT (рекомендуется для бета-тестирования)
+| Provider | Cost | Models |
+|----------|------|--------|
+| **Groq** | Free | Llama 3.3 70B, Mixtral 8x7B, Gemma 2 |
+| **Yandex AI** | Paid | YandexGPT Pro/Lite/32k, Llama |
+| **OpenAI** | Paid | GPT-4o, GPT-4o mini, GPT-3.5 |
+| **Anthropic** | Paid | Claude Opus/Sonnet/Haiku |
+| **GigaChat** | Paid | GigaChat, Plus, Pro, Max |
 
-1. Установите плагин **BRAT** из официального каталога Obsidian
+---
+
+## Installation
+
+### Via BRAT (recommended for beta testing)
+
+1. Install the **BRAT** plugin from the Obsidian community catalog
 2. BRAT → "Add Beta plugin" → `logotipza/obsidian-ya-gpt`
-3. Включите плагин в настройках
+3. Enable the plugin in Settings → Community plugins
 
-### Ручная установка
+### Manual installation
 
 ```bash
-# Клонировать репозиторий
 git clone https://github.com/logotipza/obsidian-ya-gpt.git
 cd obsidian-ya-gpt
 npm install
 npm run build
-
-# Скопировать в vault
 cp main.js manifest.json styles.css /path/to/vault/.obsidian/plugins/obsidian-ya-gpt/
 ```
 
 ---
 
-## Настройка API ключей
+## API Key Setup
 
-### Groq — бесплатно ⭐
+### Groq — Free ⭐
 
-1. Зайдите на [console.groq.com](https://console.groq.com)
-2. Зарегистрируйтесь (бесплатно, без карты)
+1. Go to [console.groq.com](https://console.groq.com)
+2. Sign up (free, no credit card required)
 3. **API Keys → Create API Key**
-4. Вставьте ключ в настройки плагина
+4. Paste the key in plugin settings
 
-### Яндекс AI Studio
+### Yandex AI Studio
 
-1. Зайдите на [console.yandex.cloud](https://console.yandex.cloud)
-2. Создайте сервисный аккаунт
-3. **IAM → API ключи → Создать**
-4. Скопируйте **Folder ID** из URL каталога
-5. Вставьте оба значения в настройки
+1. Go to [console.yandex.cloud](https://console.yandex.cloud)
+2. Create a service account
+3. **IAM → API Keys → Create**
+4. Copy your **Folder ID** from the catalog URL
+5. Paste both values in plugin settings
 
 ### OpenAI
 
-1. Зайдите на [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+1. Go to [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 2. **Create new secret key**
-3. Вставьте ключ в настройки
+3. Paste the key in plugin settings
 
 ### Anthropic Claude
 
-1. Зайдите на [console.anthropic.com](https://console.anthropic.com)
+1. Go to [console.anthropic.com](https://console.anthropic.com)
 2. **API Keys → Create Key**
-3. Вставьте ключ в настройки
+3. Paste the key in plugin settings
+
+### GigaChat (Sber)
+
+1. Go to [developers.sber.ru](https://developers.sber.ru) and sign in with Sber ID
+2. Create a project and connect the GigaChat API
+3. In the **Authorization Data** section, copy the Authorization Key
+4. Paste the key in plugin settings
 
 ---
 
-## Использование
+## Usage
 
-### Чат
-- Нажмите иконку 🤖 на боковой панели или `Cmd+P → Открыть чат Ya GPT`
-- **Enter** — отправить, **Shift+Enter** — новая строка
+### Chat
 
-### Поиск по Vault
-- Нажмите кнопку 🗄️ в шапке чата (станет красной)
-- AI найдёт релевантные заметки и покажет их как источники
+- Click the 🤖 icon in the sidebar, or use `Cmd+P → Open Ya GPT Chat`
+- **Enter** — send message, **Shift+Enter** — new line
 
-### Inline редактирование
-1. Выдели текст в заметке
-2. Правый клик → раздел **Ya GPT**:
-   - **Перевести** — авто-определение языка
-   - **Сократить** — краткий вариант
-   - **Улучшить текст** — стиль и читабельность
-   - **Объяснить** — простое объяснение
-   - **Спросить...** — свой вопрос
-3. Ответ появится в чате с кнопкой **"Заменить в заметке"**
+### Vault Search
 
-### Команды (Cmd+P)
+- Click the 🗄️ button in the chat header (turns red when active)
+- AI will find relevant notes and show them as clickable sources below its response
+- Ask date-based questions: *"What did I write about marketing in March?"*
 
-| Команда | Описание |
-|---------|----------|
-| Открыть чат Ya GPT | Открыть панель чата |
-| Резюме текущей заметки | Краткое резюме через AI |
-| Улучшить выделенный текст | Улучшить стиль |
-| Перевести выделенное | Перевод |
+### Inline Editing
 
----
+1. Select text in any note
+2. Right-click → **Ya GPT** section:
+   - **Translate** — auto-detects language direction
+   - **Shorten** — concise version preserving meaning
+   - **Improve text** — style and readability
+   - **Explain** — simple explanation
+   - **Ask...** — your custom question
+3. The response appears in the chat with a **"Replace in note"** button
 
-## Безопасность
+### Commands (Cmd+P)
 
-- **API ключи** хранятся локально в зашифрованном хранилище Obsidian (`data.json` плагина), не передаются третьим лицам
-- **Запросы** идут напрямую с вашего устройства к выбранному AI провайдеру
-- **История чата** хранится только локально в `localStorage` вашего устройства
-- **Vault данные** отправляются только в контексте вашего запроса к AI и только когда вы явно включили режим Vault или контекста заметки
-- Плагин **не собирает аналитику** и не отправляет данные на сторонние серверы
-- Исходный код открыт и проверяем: [github.com/logotipza/obsidian-ya-gpt](https://github.com/logotipza/obsidian-ya-gpt)
+| Command | Description |
+|---------|-------------|
+| Open Ya GPT Chat | Open the chat panel |
+| Summarize current note | Brief AI summary |
+| Improve selected text | Style improvement |
+| Translate selected | Auto-translate |
 
 ---
 
-## Разработка
+## Security
+
+- **API keys** are stored locally in Obsidian's encrypted storage (`data.json`), never sent to third parties
+- **Requests** go directly from your device to the chosen AI provider
+- **Chat history** is stored locally in your device's `localStorage` only
+- **Vault data** is sent only within your AI request context, and only when you explicitly enable Vault or Note Context mode
+- The plugin **collects no analytics** and sends no data to external servers
+- Source code is open and auditable: [github.com/logotipza/obsidian-ya-gpt](https://github.com/logotipza/obsidian-ya-gpt)
+
+---
+
+## Development
 
 ```bash
-npm run dev    # watch-режим для разработки
-npm run build  # production сборка
+npm run dev    # watch mode for development
+npm run build  # production build
 ```
 
 ---
 
-## Лицензия
+## License
 
 MIT © [logotipza](https://github.com/logotipza)

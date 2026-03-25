@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import type YaGptPlugin from "./main";
 import { YANDEX_MODELS } from "./api/YandexAI";
-import { GROQ_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, AIProvider, PROVIDER_NAMES } from "./api/types";
+import { GROQ_MODELS, OPENAI_MODELS, ANTHROPIC_MODELS, GIGACHAT_MODELS, AIProvider, PROVIDER_NAMES } from "./api/types";
 import { createAIClient } from "./api/factory";
 import { getT } from "./i18n";
 
@@ -22,6 +22,9 @@ export interface YaGptSettings {
   // Anthropic
   anthropicApiKey: string;
   anthropicModel: string;
+  // GigaChat
+  gigachatAuthKey: string;
+  gigachatModel: string;
   // Common
   temperature: number;
   maxTokens: number;
@@ -51,6 +54,8 @@ export const DEFAULT_SETTINGS: YaGptSettings = {
   openaiBaseUrl: "https://api.openai.com/v1",
   anthropicApiKey: "",
   anthropicModel: "claude-sonnet-4-6",
+  gigachatAuthKey: "",
+  gigachatModel: "GigaChat-Pro",
   temperature: 0.6,
   maxTokens: 2000,
   systemPrompt: "Ты умный и полезный ассистент. Отвечай на русском языке, если не сказано иначе. Будь точным, структурированным и помогай пользователю эффективно работать с заметками.",
@@ -101,10 +106,11 @@ export class YaGptSettingTab extends PluginSettingTab {
 
     // Render provider-specific settings
     switch (this.plugin.settings.provider) {
-      case "yandex": this.renderYandexSettings(containerEl); break;
-      case "groq":   this.renderGroqSettings(containerEl); break;
-      case "openai": this.renderOpenAISettings(containerEl); break;
+      case "yandex":    this.renderYandexSettings(containerEl); break;
+      case "groq":      this.renderGroqSettings(containerEl); break;
+      case "openai":    this.renderOpenAISettings(containerEl); break;
       case "anthropic": this.renderAnthropicSettings(containerEl); break;
+      case "gigachat":  this.renderGigaChatSettings(containerEl); break;
     }
 
     // Common settings
@@ -247,6 +253,42 @@ export class YaGptSettingTab extends PluginSettingTab {
       for (const m of ANTHROPIC_MODELS) d.addOption(m.id, m.name);
       d.setValue(this.plugin.settings.anthropicModel)
         .onChange(async (v) => { this.plugin.settings.anthropicModel = v; await this.plugin.saveSettings(); });
+    });
+  }
+
+  private renderGigaChatSettings(containerEl: HTMLElement): void {
+    const t = getT();
+    this.addSection(containerEl, t.sectionGigaChat);
+    const info = containerEl.createDiv("yagpt-settings-info");
+    info.createEl("p", { text: t.gigachatInfo });
+    info.createEl("p").createEl("a", {
+      text: t.gigachatLink,
+      href: "https://developers.sber.ru/portal/products/gigachat-api",
+      attr: { target: "_blank" },
+    });
+    const steps = info.createEl("ol", { cls: "yagpt-settings-steps" });
+    [t.gigachatStep1, t.gigachatStep2, t.gigachatStep3, t.gigachatStep4].forEach((s) =>
+      steps.createEl("li", { text: s })
+    );
+
+    new Setting(containerEl).setName(t.gigachatAuthKeyLabel).setDesc(t.gigachatAuthKeyDesc)
+      .addText((tx) => {
+        tx.setPlaceholder("base64...").setValue(this.plugin.settings.gigachatAuthKey)
+          .onChange(async (v) => { this.plugin.settings.gigachatAuthKey = v.trim(); await this.plugin.saveSettings(); });
+        tx.inputEl.type = "password";
+      }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
+        b.setButtonText(t.btnTesting); b.setDisabled(true);
+        try {
+          await createAIClient(this.plugin.settings).complete([{ role: "user", content: "Привет" }]);
+          new Notice(t.testSuccess("GigaChat"));
+        } catch (e) { new Notice(`❌ ${e.message}`); }
+        finally { b.setButtonText(t.btnTest); b.setDisabled(false); }
+      }));
+
+    new Setting(containerEl).setName(t.settingModel).addDropdown((d) => {
+      for (const m of GIGACHAT_MODELS) d.addOption(m.id, m.name);
+      d.setValue(this.plugin.settings.gigachatModel)
+        .onChange(async (v) => { this.plugin.settings.gigachatModel = v; await this.plugin.saveSettings(); });
     });
   }
 

@@ -2,6 +2,7 @@ import { AIClient } from "./types";
 import { YandexAIClient } from "./YandexAI";
 import { OpenAICompatClient } from "./OpenAICompatClient";
 import { AnthropicClient } from "./AnthropicClient";
+import { GigaChatClient } from "./GigaChatClient";
 import type { YaGptSettings } from "../settings";
 
 export function createAIClient(settings: YaGptSettings): AIClient {
@@ -28,6 +29,14 @@ export function createAIClient(settings: YaGptSettings): AIClient {
       return new AnthropicClient({
         apiKey: settings.anthropicApiKey,
         model: settings.anthropicModel,
+        temperature: settings.temperature,
+        maxTokens: settings.maxTokens,
+      });
+
+    case "gigachat":
+      return new GigaChatClient({
+        authKey: settings.gigachatAuthKey,
+        model: settings.gigachatModel,
         temperature: settings.temperature,
         maxTokens: settings.maxTokens,
       });

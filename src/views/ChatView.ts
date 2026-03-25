@@ -237,6 +237,7 @@ export class ChatView extends ItemView {
       groq: this.plugin.settings.groqModel.split("-").slice(0, 3).join(" "),
       openai: this.plugin.settings.openaiModel,
       anthropic: this.plugin.settings.anthropicModel.split("-").slice(0, 2).join(" "),
+      gigachat: this.plugin.settings.gigachatModel,
     };
     this.modelBadge.setText(badges[p] || p);
   }

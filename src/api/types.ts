@@ -14,14 +14,22 @@ export interface AIClient {
   completeStream(messages: AIMessage[]): AsyncGenerator<string>;
 }
 
-export type AIProvider = "yandex" | "groq" | "openai" | "anthropic";
+export type AIProvider = "yandex" | "groq" | "openai" | "anthropic" | "gigachat";
 
 export const PROVIDER_NAMES: Record<AIProvider, string> = {
   yandex: "Яндекс AI Studio",
   groq: "Groq (бесплатно)",
   openai: "OpenAI",
   anthropic: "Anthropic Claude",
+  gigachat: "GigaChat (Сбер)",
 };
+
+export const GIGACHAT_MODELS = [
+  { id: "GigaChat",     name: "GigaChat (базовый)" },
+  { id: "GigaChat-Plus", name: "GigaChat Plus" },
+  { id: "GigaChat-Pro", name: "GigaChat Pro" },
+  { id: "GigaChat-Max", name: "GigaChat Max (мощный)" },
+];
 
 export const GROQ_MODELS = [
   { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (лучший)" },
