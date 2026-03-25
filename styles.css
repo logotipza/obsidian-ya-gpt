@@ -855,6 +855,31 @@
 }
 
 /* ================================================================
+   NOTE REFS — кликабельные ссылки на заметки в тексте
+   ================================================================ */
+.yagpt-note-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 5px;
+  border: 1px solid var(--yagpt-accent, #ff4545);
+  background: rgba(255, 69, 69, 0.08);
+  color: var(--yagpt-accent, #ff4545);
+  font-size: 0.9em;
+  font-family: var(--font-monospace);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  vertical-align: baseline;
+  line-height: 1.4;
+}
+
+.yagpt-note-ref:hover {
+  background: rgba(255, 69, 69, 0.18);
+  transform: translateY(-1px);
+}
+
+/* ================================================================
    LAYOUT SAFETY — всегда, на любой ширине
    ================================================================ */
 .yagpt-msg-wrapper {

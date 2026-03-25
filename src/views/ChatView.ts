@@ -290,11 +290,13 @@ export class ChatView extends ItemView {
           await MarkdownRenderer.render(this.app, fullText, contentEl, "", this);
           this.scrollToBottom();
         }
+        this.linkifyNoteRefs(contentEl);
       } else {
         const reply = await client.complete(apiMessages);
         assistantMsg.content = reply.text;
         contentEl.empty();
         await MarkdownRenderer.render(this.app, reply.text, contentEl, "", this);
+        this.linkifyNoteRefs(contentEl);
         if (this.plugin.settings.showTokenCount && (reply.inputTokens || reply.outputTokens)) {
           this.showStatus(`🔢 Токены: ${reply.inputTokens} вход · ${reply.outputTokens} выход · ${reply.inputTokens + reply.outputTokens} итого`);
         }
@@ -353,10 +355,10 @@ export class ChatView extends ItemView {
     const lastMsg = this.messages[this.messages.length - 1];
     const userQuery = lastMsg?.role === "user" ? lastMsg.content : "";
 
-    // Vault-wide context with relevance search
+    // Vault-wide context with relevance + date search
     if (this.plugin.settings.vaultSearchEnabled) {
       const files = this.app.vault.getMarkdownFiles();
-      const scored: Array<{ path: string; content: string; score: number }> = [];
+      const scored: Array<{ path: string; content: string; score: number; ctime: number; mtime: number }> = [];
 
       const keywords = userQuery
         .toLowerCase()
@@ -364,36 +366,53 @@ export class ChatView extends ItemView {
         .split(/\s+/)
         .filter((w) => w.length > 2);
 
+      // Try to detect a date mention in the query
+      const queryDate = this.extractDateFromQuery(userQuery);
+
       for (const file of files) {
         const content = await this.app.vault.cachedRead(file);
         if (!content.trim()) continue;
 
-        // Score by keyword hits in path + content
         let score = 0;
         const haystack = (file.path + " " + content).toLowerCase();
+
+        // Keyword scoring
         for (const kw of keywords) {
           if (file.path.toLowerCase().includes(kw)) score += 5;
           const matches = haystack.match(new RegExp(kw, "gi"));
           if (matches) score += Math.min(matches.length, 10);
         }
-        scored.push({ path: file.path, content, score });
+
+        // Date proximity scoring — boost files created/modified near the mentioned date
+        if (queryDate) {
+          const dayMs = 86400000;
+          const ctimeDiff = Math.abs(file.stat.ctime - queryDate.getTime());
+          const mtimeDiff = Math.abs(file.stat.mtime - queryDate.getTime());
+          const closest = Math.min(ctimeDiff, mtimeDiff);
+          if (closest < dayMs) score += 30;         // same day
+          else if (closest < dayMs * 3) score += 15; // within 3 days
+          else if (closest < dayMs * 7) score += 7;  // within a week
+        }
+
+        scored.push({ path: file.path, content, score, ctime: file.stat.ctime, mtime: file.stat.mtime });
       }
 
-      // Sort by relevance, take top N, but always include at least some notes
       scored.sort((a, b) => b.score - a.score);
       const maxResults = this.plugin.settings.vaultSearchResults;
       const topScored = scored.filter((f) => f.score > 0).slice(0, maxResults);
-      // If nothing matched — include all notes (fallback)
       const toInclude = topScored.length > 0 ? topScored : scored.slice(0, 20);
 
       const parts: string[] = [];
       for (const item of toInclude) {
         sources.push(item.path);
-        parts.push(`### ${item.path}\n${item.content.slice(0, 2000)}`);
+        const created = this.formatDate(item.ctime);
+        const modified = this.formatDate(item.mtime);
+        const dateMeta = `Создана: ${created} · Изменена: ${modified}`;
+        parts.push(`### ${item.path}\n${dateMeta}\n${item.content.slice(0, 2000)}`);
       }
 
       new Notice(`📂 Загружено заметок: ${parts.length}`, 3000);
-      systemText += `\n\n⚠️ ВАЖНО: Ниже предоставлены реальные заметки из Obsidian Vault пользователя. Ты ИМЕЕШЬ доступ к этим данным прямо сейчас — они уже здесь, в этом сообщении. НИКОГДА не говори "у меня нет доступа к вашим заметкам". Используй эти заметки чтобы отвечать на вопросы. Путь к файлу показывает папку и название (например "Тильда/Заметка.md" = папка "Тильда"). Заметки:\n\n${parts.join("\n\n---\n\n")}`;
+      systemText += `\n\n⚠️ ВАЖНО: Ниже предоставлены реальные заметки из Obsidian Vault пользователя. Ты ИМЕЕШЬ доступ к этим данным прямо сейчас. НИКОГДА не говори "у меня нет доступа к вашим заметкам". Каждая заметка содержит дату создания и изменения — используй их для ответов на вопросы типа "что я писал 12 апреля". Путь показывает папку/название. Заметки:\n\n${parts.join("\n\n---\n\n")}`;
     }
 
     // Single note context
@@ -564,6 +583,133 @@ export class ChatView extends ItemView {
     if (this.plugin.settings.saveHistory) {
       this.saveHistory();
     }
+  }
+
+  // Post-process rendered AI content: make note .md refs clickable
+  private linkifyNoteRefs(el: HTMLElement): void {
+    const allFiles = this.app.vault.getMarkdownFiles();
+    const pathMap = new Map<string, string>();
+    for (const f of allFiles) {
+      pathMap.set(f.name.toLowerCase(), f.path);
+      pathMap.set(f.basename.toLowerCase(), f.path);
+      pathMap.set(f.path.toLowerCase(), f.path);
+    }
+
+    // Walk all text nodes
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodesToProcess: Text[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) {
+      if (node.textContent && /[\wа-яёА-ЯЁ][\w\sа-яёА-ЯЁ-]*\.md/i.test(node.textContent)) {
+        nodesToProcess.push(node as Text);
+      }
+    }
+
+    for (const textNode of nodesToProcess) {
+      const text = textNode.textContent || "";
+      // Match: optional «» or "" quotes, word chars + spaces + .md
+      const regex = /([«"]?)([\wа-яёА-ЯЁ][\w\sа-яёА-ЯЁ/-]*\.md)([»"]?)/gi;
+      const parts: (string | HTMLElement)[] = [];
+      let lastIndex = 0;
+      let match: RegExpExecArray | null;
+
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(text.slice(lastIndex, match.index));
+        }
+
+        const openQuote = match[1];
+        const filename = match[2].trim();
+        const closeQuote = match[3];
+
+        // Check if this file exists in vault
+        const foundPath = pathMap.get(filename.toLowerCase()) ||
+          pathMap.get(filename.replace(/\.md$/i, "").toLowerCase());
+
+        if (foundPath) {
+          if (openQuote) parts.push(openQuote);
+          const link = document.createElement("button");
+          link.className = "yagpt-note-ref";
+          link.textContent = filename;
+          link.title = foundPath;
+          link.addEventListener("click", () => {
+            this.app.workspace.openLinkText(foundPath, "", false);
+          });
+          parts.push(link);
+          if (closeQuote) parts.push(closeQuote);
+        } else {
+          parts.push(match[0]);
+        }
+
+        lastIndex = match.index + match[0].length;
+      }
+
+      if (parts.length === 0) continue;
+      if (lastIndex < text.length) parts.push(text.slice(lastIndex));
+
+      const frag = document.createDocumentFragment();
+      for (const part of parts) {
+        if (typeof part === "string") frag.appendChild(document.createTextNode(part));
+        else frag.appendChild(part);
+      }
+      textNode.parentNode?.replaceChild(frag, textNode);
+    }
+  }
+
+  private formatDate(ts: number): string {
+    return new Date(ts).toLocaleDateString("ru-RU", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+  }
+
+  private extractDateFromQuery(query: string): Date | null {
+    const now = new Date();
+    const q = query.toLowerCase();
+
+    // "вчера"
+    if (q.includes("вчера")) {
+      const d = new Date(now); d.setDate(d.getDate() - 1); return d;
+    }
+    // "сегодня"
+    if (q.includes("сегодня")) return now;
+    // "позавчера"
+    if (q.includes("позавчера")) {
+      const d = new Date(now); d.setDate(d.getDate() - 2); return d;
+    }
+    // "на прошлой неделе"
+    if (q.includes("прошлой неделе") || q.includes("на прошлой неделе")) {
+      const d = new Date(now); d.setDate(d.getDate() - 7); return d;
+    }
+
+    const RU_MONTHS: Record<string, number> = {
+      "январ": 0, "феврал": 1, "март": 2, "апрел": 3, "ма": 4, "июн": 5,
+      "июл": 6, "август": 7, "сентябр": 8, "октябр": 9, "ноябр": 10, "декабр": 11,
+    };
+
+    // "12 апреля", "12 апреля 2024"
+    const datePattern = /(\d{1,2})\s+(январ\w*|феврал\w*|март\w*|апрел\w*|ма[яе]\w*|июн\w*|июл\w*|август\w*|сентябр\w*|октябр\w*|ноябр\w*|декабр\w*)(?:\s+(\d{4}))?/i;
+    const m = q.match(datePattern);
+    if (m) {
+      const day = parseInt(m[1]);
+      const monthKey = Object.keys(RU_MONTHS).find((k) => m[2].toLowerCase().startsWith(k));
+      const month = monthKey !== undefined ? RU_MONTHS[monthKey] : -1;
+      const year = m[3] ? parseInt(m[3]) : now.getFullYear();
+      if (month >= 0 && day >= 1 && day <= 31) {
+        return new Date(year, month, day);
+      }
+    }
+
+    // "в апреле", "в марте 2024" — return first day of month
+    const monthOnly = /в\s+(январ\w*|феврал\w*|март\w*|апрел\w*|ма[яе]\w*|июн\w*|июл\w*|август\w*|сентябр\w*|октябр\w*|ноябр\w*|декабр\w*)(?:\s+(\d{4}))?/i;
+    const m2 = q.match(monthOnly);
+    if (m2) {
+      const monthKey = Object.keys(RU_MONTHS).find((k) => m2[1].toLowerCase().startsWith(k));
+      const month = monthKey !== undefined ? RU_MONTHS[monthKey] : -1;
+      const year = m2[2] ? parseInt(m2[2]) : now.getFullYear();
+      if (month >= 0) return new Date(year, month, 15); // mid-month
+    }
+
+    return null;
   }
 
   private showStatus(text: string): void {
