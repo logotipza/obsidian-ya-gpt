@@ -3,6 +3,7 @@ import type YaGptPlugin from "../main";
 import { AIMessage as ChatMessage } from "../api/types";
 import { createAIClient } from "../api/factory";
 import { VaultSearch } from "../vault/VaultSearch";
+import { getT } from "../i18n";
 
 export const CHAT_VIEW_TYPE = "ya-gpt-chat";
 
@@ -58,6 +59,8 @@ export class ChatView extends ItemView {
     this.scrollToBottom();
   }
 
+  private get t() { return getT(); }
+
   async onClose(): Promise<void> {
     this.abortController?.abort();
   }
@@ -84,47 +87,43 @@ export class ChatView extends ItemView {
     // Vault search button
     const vaultBtn = headerActions.createEl("button", {
       cls: "yagpt-icon-btn",
-      attr: { title: "Поиск по всему vault", "aria-label": "Vault" },
+      attr: { title: this.t.btnVault, "aria-label": this.t.btnVault },
     });
     setIcon(vaultBtn, "database");
     vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
     vaultBtn.addEventListener("click", async () => {
       this.plugin.settings.vaultSearchEnabled = !this.plugin.settings.vaultSearchEnabled;
-      // Выключаем одиночный контекст если включаем vault
       if (this.plugin.settings.vaultSearchEnabled) {
         this.plugin.settings.includeNoteContext = false;
         noteCtxBtn.toggleClass("yagpt-active", false);
       }
       vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
       await this.plugin.saveSettings();
-      const state = this.plugin.settings.vaultSearchEnabled ? "включён" : "выключен";
-      new Notice(`Поиск по Vault ${state}`);
+      new Notice(this.plugin.settings.vaultSearchEnabled ? this.t.vaultEnabled : this.t.vaultDisabled);
     });
 
     // Include note toggle button
     const noteCtxBtn = headerActions.createEl("button", {
       cls: "yagpt-icon-btn",
-      attr: { title: "Контекст текущей заметки", "aria-label": "Контекст заметки" },
+      attr: { title: this.t.btnNoteContext, "aria-label": this.t.btnNoteContext },
     });
     setIcon(noteCtxBtn, "file-text");
     noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
     noteCtxBtn.addEventListener("click", async () => {
       this.plugin.settings.includeNoteContext = !this.plugin.settings.includeNoteContext;
-      // Выключаем vault если включаем одиночный контекст
       if (this.plugin.settings.includeNoteContext) {
         this.plugin.settings.vaultSearchEnabled = false;
         vaultBtn.toggleClass("yagpt-active", false);
       }
       noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
       await this.plugin.saveSettings();
-      const state = this.plugin.settings.includeNoteContext ? "включён" : "выключен";
-      new Notice(`Контекст заметки ${state}`);
+      new Notice(this.plugin.settings.includeNoteContext ? this.t.noteContextEnabled : this.t.noteContextDisabled);
     });
 
     // New chat button
     const newChatBtn = headerActions.createEl("button", {
       cls: "yagpt-icon-btn",
-      attr: { title: "Новый чат", "aria-label": "Новый чат" },
+      attr: { title: this.t.btnNewChat, "aria-label": this.t.btnNewChat },
     });
     setIcon(newChatBtn, "plus");
     newChatBtn.addEventListener("click", () => this.clearChat());
@@ -132,7 +131,7 @@ export class ChatView extends ItemView {
     // Settings button
     const settingsBtn = headerActions.createEl("button", {
       cls: "yagpt-icon-btn",
-      attr: { title: "Настройки", "aria-label": "Настройки" },
+      attr: { title: this.t.btnSettings, "aria-label": this.t.btnSettings },
     });
     setIcon(settingsBtn, "settings");
     settingsBtn.addEventListener("click", () => {
@@ -162,7 +161,7 @@ export class ChatView extends ItemView {
     this.inputEl = inputWrapper.createEl("textarea", {
       cls: "yagpt-textarea",
       attr: {
-        placeholder: "Спросите YandexGPT что-нибудь...",
+        placeholder: this.t.inputPlaceholder,
         rows: "1",
       },
     });
@@ -189,18 +188,18 @@ export class ChatView extends ItemView {
 
     this.stopBtn = btnGroup.createEl("button", {
       cls: "yagpt-stop-btn",
-      attr: { title: "Остановить генерацию", style: "display:none" },
+      attr: { title: this.t.btnStop, style: "display:none" },
     });
     setIcon(this.stopBtn, "square");
     this.stopBtn.addEventListener("click", () => this.stopGeneration());
 
-    this.sendBtn = btnGroup.createEl("button", { cls: "yagpt-send-btn", attr: { title: "Отправить (Enter)" } });
+    this.sendBtn = btnGroup.createEl("button", { cls: "yagpt-send-btn", attr: { title: this.t.btnSend } });
     setIcon(this.sendBtn, "send");
     this.sendBtn.addEventListener("click", () => this.handleSend());
 
     // Footer hint
     const hint = inputArea.createDiv("yagpt-input-hint");
-    hint.createEl("span", { text: "Enter — отправить · Shift+Enter — новая строка" });
+    hint.createEl("span", { text: this.t.inputHint });
   }
 
   private renderWelcome(): void {
@@ -210,14 +209,14 @@ export class ChatView extends ItemView {
     const logo = welcome.createDiv("yagpt-welcome-logo");
     logo.createEl("span", { text: "Я", cls: "yagpt-welcome-logo-letter" });
     welcome.createEl("h2", { text: "Ya GPT", cls: "yagpt-welcome-title" });
-    welcome.createEl("p", { text: "Яндекс AI прямо в Obsidian", cls: "yagpt-welcome-subtitle" });
+    welcome.createEl("p", { text: this.t.welcomeSubtitle, cls: "yagpt-welcome-subtitle" });
 
     const suggestions = welcome.createDiv("yagpt-suggestions");
     const items = [
-      { icon: "✍️", text: "Улучши мою заметку" },
-      { icon: "📋", text: "Сделай краткое резюме" },
-      { icon: "🔍", text: "Найди ключевые идеи" },
-      { icon: "🌐", text: "Переведи на английский" },
+      { icon: "✍️", text: this.t.suggestionImprove },
+      { icon: "📋", text: this.t.suggestionSummarize },
+      { icon: "🔍", text: this.t.suggestionKeyIdeas },
+      { icon: "🌐", text: this.t.suggestionTranslate },
     ];
     for (const item of items) {
       const chip = suggestions.createEl("button", { cls: "yagpt-suggestion-chip" });
@@ -245,8 +244,8 @@ export class ChatView extends ItemView {
   private async handleSend(): Promise<void> {
     const text = this.inputEl.value.trim();
     if (!text || this.isLoading) return;
-    if (!this.plugin.settings.apiKey) {
-      new Notice("❌ Укажите API ключ в настройках плагина");
+    if (!this.plugin.settings.apiKey && this.plugin.settings.provider === "yandex") {
+      new Notice(this.t.errNoApiKey);
       (this.app as any).setting.open();
       (this.app as any).setting.openTabById("obsidian-ya-gpt");
       return;
@@ -268,7 +267,7 @@ export class ChatView extends ItemView {
 
     try {
       if (this.plugin.settings.vaultSearchEnabled) {
-        this.showStatus("🔍 Ищу в заметках...");
+        this.showStatus(this.t.statusSearching);
       }
       const { messages: apiMessages, sources } = await this.buildApiMessages();
       this.showStatus("");
@@ -298,7 +297,7 @@ export class ChatView extends ItemView {
         await MarkdownRenderer.render(this.app, reply.text, contentEl, "", this);
         this.linkifyNoteRefs(contentEl);
         if (this.plugin.settings.showTokenCount && (reply.inputTokens || reply.outputTokens)) {
-          this.showStatus(`🔢 Токены: ${reply.inputTokens} вход · ${reply.outputTokens} выход · ${reply.inputTokens + reply.outputTokens} итого`);
+          this.showStatus(this.t.statusTokens(reply.inputTokens, reply.outputTokens));
         }
       }
 
@@ -407,12 +406,12 @@ export class ChatView extends ItemView {
         sources.push(item.path);
         const created = this.formatDate(item.ctime);
         const modified = this.formatDate(item.mtime);
-        const dateMeta = `Создана: ${created} · Изменена: ${modified}`;
+        const dateMeta = this.t.vaultDateMeta(created, modified);
         parts.push(`### ${item.path}\n${dateMeta}\n${item.content.slice(0, 2000)}`);
       }
 
-      new Notice(`📂 Загружено заметок: ${parts.length}`, 3000);
-      systemText += `\n\n⚠️ ВАЖНО: Ниже предоставлены реальные заметки из Obsidian Vault пользователя. Ты ИМЕЕШЬ доступ к этим данным прямо сейчас. НИКОГДА не говори "у меня нет доступа к вашим заметкам". Каждая заметка содержит дату создания и изменения — используй их для ответов на вопросы типа "что я писал 12 апреля". Путь показывает папку/название. Заметки:\n\n${parts.join("\n\n---\n\n")}`;
+      new Notice(this.t.vaultLoaded(parts.length), 3000);
+      systemText += `\n\n${this.t.vaultContextPrompt}\n\n${parts.join("\n\n---\n\n")}`;
     }
 
     // Single note context
@@ -466,15 +465,16 @@ export class ChatView extends ItemView {
     if (msg.role === "assistant") {
       const actions = bubble.createDiv("yagpt-msg-actions");
 
-      const copyBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: "Копировать" } });
+      const copyBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: this.t.msgCopy } });
       setIcon(copyBtn, "copy");
       copyBtn.addEventListener("click", async () => {
         await navigator.clipboard.writeText(msg.content);
+        new Notice(this.t.msgCopied);
         setIcon(copyBtn, "check");
         setTimeout(() => setIcon(copyBtn, "copy"), 2000);
       });
 
-      const insertBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: "Вставить в заметку" } });
+      const insertBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: this.t.msgInsert } });
       setIcon(insertBtn, "file-plus");
       insertBtn.addEventListener("click", () => this.insertIntoNote(msg.content));
 
@@ -494,7 +494,7 @@ export class ChatView extends ItemView {
     const replaceBar = bubble.createDiv("yagpt-replace-bar");
 
     const previewEl = replaceBar.createDiv("yagpt-replace-preview");
-    previewEl.createEl("span", { text: "Заменит: ", cls: "yagpt-replace-label" });
+    previewEl.createEl("span", { text: this.t.replaceWillReplace + " ", cls: "yagpt-replace-label" });
     previewEl.createEl("span", {
       text: `"${originalSelection.slice(0, 60)}${originalSelection.length > 60 ? "…" : ""}"`,
       cls: "yagpt-replace-original",
@@ -504,17 +504,16 @@ export class ChatView extends ItemView {
 
     const replaceBtn = btns.createEl("button", { cls: "yagpt-replace-btn yagpt-replace-btn--confirm" });
     setIcon(replaceBtn, "check");
-    replaceBtn.createEl("span", { text: "Заменить в заметке" });
+    replaceBtn.createEl("span", { text: this.t.replaceBtnConfirm });
     replaceBtn.addEventListener("click", () => {
-      // Strip markdown for clean replacement if needed, use raw text
       editor.replaceSelection(newText);
-      new Notice("✅ Текст заменён в заметке");
+      new Notice(this.t.replaceSuccess);
       replaceBar.remove();
     });
 
     const dismissBtn = btns.createEl("button", { cls: "yagpt-replace-btn yagpt-replace-btn--dismiss" });
     setIcon(dismissBtn, "x");
-    dismissBtn.createEl("span", { text: "Не заменять" });
+    dismissBtn.createEl("span", { text: this.t.replaceBtnDismiss });
     dismissBtn.addEventListener("click", () => {
       replaceBar.remove();
     });
@@ -543,10 +542,10 @@ export class ChatView extends ItemView {
       const editor = (activeView as any).editor;
       const cursor = editor.getCursor();
       editor.replaceRange("\n" + text + "\n", cursor);
-      new Notice("✅ Вставлено в заметку");
+      new Notice(this.t.msgInserted);
     } else {
       await navigator.clipboard.writeText(text);
-      new Notice("📋 Скопировано в буфер (заметка не открыта)");
+      new Notice(this.t.msgCopiedFallback);
     }
   }
 

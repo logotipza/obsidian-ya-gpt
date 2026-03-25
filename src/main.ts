@@ -1,6 +1,7 @@
 import { Plugin, WorkspaceLeaf, addIcon, Editor, MarkdownView, Menu } from "obsidian";
 import { YaGptSettings, DEFAULT_SETTINGS, YaGptSettingTab } from "./settings";
 import { ChatView, CHAT_VIEW_TYPE } from "./views/ChatView";
+import { getT } from "./i18n";
 
 const YA_GPT_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <circle cx="50" cy="50" r="45" fill="currentColor" opacity="0.15"/>
@@ -26,43 +27,18 @@ export default class YaGptPlugin extends Plugin {
       this.app.workspace.on("editor-menu", (menu: Menu, editor: Editor, view: MarkdownView) => {
         const selection = editor.getSelection();
         if (!selection) return;
-
+        const t = getT();
         menu.addSeparator();
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Ya GPT: Перевести")
-            .setIcon("languages")
-            .onClick(() => this.handleInlineAction(editor, selection, "translate"));
-        });
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Ya GPT: Сократить")
-            .setIcon("scissors")
-            .onClick(() => this.handleInlineAction(editor, selection, "shorten"));
-        });
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Ya GPT: Улучшить текст")
-            .setIcon("wand-2")
-            .onClick(() => this.handleInlineAction(editor, selection, "improve"));
-        });
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Ya GPT: Объяснить")
-            .setIcon("help-circle")
-            .onClick(() => this.handleInlineAction(editor, selection, "explain"));
-        });
-
-        menu.addItem((item) => {
-          item
-            .setTitle("Ya GPT: Спросить...")
-            .setIcon("message-circle")
-            .onClick(() => this.handleInlineAction(editor, selection, "ask"));
-        });
+        menu.addItem((item) => item.setTitle(t.ctxTranslate).setIcon("languages")
+          .onClick(() => this.handleInlineAction(editor, selection, "translate")));
+        menu.addItem((item) => item.setTitle(t.ctxShorten).setIcon("scissors")
+          .onClick(() => this.handleInlineAction(editor, selection, "shorten")));
+        menu.addItem((item) => item.setTitle(t.ctxImprove).setIcon("wand-2")
+          .onClick(() => this.handleInlineAction(editor, selection, "improve")));
+        menu.addItem((item) => item.setTitle(t.ctxExplain).setIcon("help-circle")
+          .onClick(() => this.handleInlineAction(editor, selection, "explain")));
+        menu.addItem((item) => item.setTitle(t.ctxAsk).setIcon("message-circle")
+          .onClick(() => this.handleInlineAction(editor, selection, "ask")));
       })
     );
 
@@ -114,11 +90,12 @@ export default class YaGptPlugin extends Plugin {
     selection: string,
     action: "translate" | "shorten" | "improve" | "explain" | "ask"
   ): Promise<void> {
+    const t = getT();
     const prompts: Record<string, string> = {
-      translate: `Переведи следующий текст на русский язык (если он на русском — переведи на английский). Верни только перевод, без пояснений:\n\n${selection}`,
-      shorten: `Сократи следующий текст, сохрани главный смысл. Верни только сокращённый текст:\n\n${selection}`,
-      improve: `Улучши стиль и читабельность следующего текста, сохрани смысл и язык. Верни только улучшенный текст:\n\n${selection}`,
-      explain: `Объясни простыми словами следующий текст:\n\n${selection}`,
+      translate: t.promptTranslate(selection),
+      shorten:   t.promptShorten(selection),
+      improve:   t.promptImprove(selection),
+      explain:   t.promptExplain(selection),
       ask: ``,
     };
 
@@ -131,8 +108,7 @@ export default class YaGptPlugin extends Plugin {
     if (!view) return;
 
     if (action === "ask") {
-      // For "ask" — just put the selection in the input, user types the question
-      view.inputEl.value = `Вопрос по тексту: "${selection.slice(0, 200)}"\n\n`;
+      view.inputEl.value = t.promptAsk(selection);
       view.inputEl.dispatchEvent(new Event("input"));
       view.inputEl.focus();
       // Position cursor at end
