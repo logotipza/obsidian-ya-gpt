@@ -136,7 +136,7 @@ export class ChatView extends ItemView {
     setIcon(settingsBtn, "settings");
     settingsBtn.addEventListener("click", () => {
       (this.app as any).setting.open();
-      (this.app as any).setting.openTabById("obsidian-ya-gpt");
+      (this.app as any).setting.openTabById("ya-gpt");
     });
 
     // Messages area
@@ -208,7 +208,7 @@ export class ChatView extends ItemView {
     const welcome = this.messagesContainer.createDiv("yagpt-welcome");
     const logo = welcome.createDiv("yagpt-welcome-logo");
     logo.createEl("span", { text: "Я", cls: "yagpt-welcome-logo-letter" });
-    welcome.createEl("h2", { text: "AI Chat for Obsidian", cls: "yagpt-welcome-title" });
+    welcome.createEl("h2", { text: "AI Chat", cls: "yagpt-welcome-title" });
     welcome.createEl("p", { text: this.t.welcomeSubtitle, cls: "yagpt-welcome-subtitle" });
 
     const suggestions = welcome.createDiv("yagpt-suggestions");
@@ -248,7 +248,7 @@ export class ChatView extends ItemView {
     if (!this.plugin.settings.apiKey && this.plugin.settings.provider === "yandex") {
       new Notice(this.t.errNoApiKey);
       (this.app as any).setting.open();
-      (this.app as any).setting.openTabById("obsidian-ya-gpt");
+      (this.app as any).setting.openTabById("ya-gpt");
       return;
     }
 

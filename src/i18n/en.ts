@@ -1,6 +1,6 @@
 export default {
   // Header
-  pluginName: "AI Chat for Obsidian",
+  pluginName: "AI Chat",
   btnVault: "Search entire Vault",
   btnNoteContext: "Current note context",
   btnNewChat: "New chat",
@@ -69,7 +69,7 @@ export default {
   promptSummarize: (text: string) => `Please make a brief summary of the following text:\n\n${text}`,
 
   // Settings
-  settingsTitle: "AI Chat for Obsidian — Settings",
+  settingsTitle: "AI Chat — Settings",
   settingsSubtitle: "AI integration right in Obsidian",
   sectionProvider: "🤖 AI Provider",
   sectionGeneration: "⚙️ Generation parameters",

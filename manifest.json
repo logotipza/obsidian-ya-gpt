@@ -1,9 +1,9 @@
 {
-  "id": "obsidian-ya-gpt",
-  "name": "AI Chat for Obsidian",
+  "id": "ya-gpt",
+  "name": "AI Chat",
   "version": "1.0.0",
   "minAppVersion": "1.4.0",
-  "description": "AI assistant with multi-provider support: Yandex AI Studio, Groq (free), OpenAI, Anthropic Claude, GigaChat. Chat panel, vault search, inline editing.",
+  "description": "AI assistant with multi-provider support: Yandex AI Studio, Groq, OpenAI, Anthropic, GigaChat. Chat panel, vault search, inline text editing.",
   "author": "logotipza",
   "authorUrl": "https://github.com/logotipza",
   "fundingUrl": "",
