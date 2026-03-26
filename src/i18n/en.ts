@@ -1,6 +1,6 @@
 export default {
   // Header
-  pluginName: "Ya GPT",
+  pluginName: "AI Chat for Obsidian",
   btnVault: "Search entire Vault",
   btnNoteContext: "Current note context",
   btnNewChat: "New chat",
@@ -51,11 +51,11 @@ export default {
   errNoFolderId: "Folder ID is not set. Open plugin settings.",
 
   // Context menu
-  ctxTranslate: "Ya GPT: Translate",
-  ctxShorten: "Ya GPT: Shorten",
-  ctxImprove: "Ya GPT: Improve text",
-  ctxExplain: "Ya GPT: Explain",
-  ctxAsk: "Ya GPT: Ask...",
+  ctxTranslate: "AI Chat: Translate",
+  ctxShorten: "AI Chat: Shorten",
+  ctxImprove: "AI Chat: Improve text",
+  ctxExplain: "AI Chat: Explain",
+  ctxAsk: "AI Chat: Ask...",
 
   // Prompts
   promptTranslate: (text: string) =>
@@ -69,7 +69,7 @@ export default {
   promptSummarize: (text: string) => `Please make a brief summary of the following text:\n\n${text}`,
 
   // Settings
-  settingsTitle: "Ya GPT — Settings",
+  settingsTitle: "AI Chat for Obsidian — Settings",
   settingsSubtitle: "AI integration right in Obsidian",
   sectionProvider: "🤖 AI Provider",
   sectionGeneration: "⚙️ Generation parameters",

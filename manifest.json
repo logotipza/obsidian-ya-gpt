@@ -1,9 +1,9 @@
 {
   "id": "obsidian-ya-gpt",
-  "name": "Ya GPT — Яндекс AI",
+  "name": "AI Chat for Obsidian",
   "version": "1.0.0",
   "minAppVersion": "1.4.0",
-  "description": "Чат с YandexGPT прямо в Obsidian. Используйте мощь Яндекс AI Studio для работы с вашими заметками.",
+  "description": "AI assistant with multi-provider support: Yandex AI Studio, Groq (free), OpenAI, Anthropic Claude, GigaChat. Chat panel, vault search, inline editing.",
   "author": "logotipza",
   "authorUrl": "https://github.com/logotipza",
   "fundingUrl": "",

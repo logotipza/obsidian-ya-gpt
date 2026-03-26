@@ -1,4 +1,4 @@
-# Ya GPT — AI Assistant for Obsidian
+# AI Chat for Obsidian
 
 A powerful Obsidian plugin with multi-provider AI support: **Yandex AI Studio**, **Groq (free)**, **OpenAI**, **Anthropic Claude**, **GigaChat (Sber)**.
 

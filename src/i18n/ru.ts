@@ -1,6 +1,6 @@
 export default {
   // Header
-  pluginName: "Ya GPT",
+  pluginName: "AI Chat for Obsidian",
   btnVault: "Поиск по всему Vault",
   btnNoteContext: "Контекст текущей заметки",
   btnNewChat: "Новый чат",
@@ -51,11 +51,11 @@ export default {
   errNoFolderId: "Folder ID не указан. Откройте настройки плагина.",
 
   // Context menu
-  ctxTranslate: "Ya GPT: Перевести",
-  ctxShorten: "Ya GPT: Сократить",
-  ctxImprove: "Ya GPT: Улучшить текст",
-  ctxExplain: "Ya GPT: Объяснить",
-  ctxAsk: "Ya GPT: Спросить...",
+  ctxTranslate: "AI Chat: Перевести",
+  ctxShorten: "AI Chat: Сократить",
+  ctxImprove: "AI Chat: Улучшить текст",
+  ctxExplain: "AI Chat: Объяснить",
+  ctxAsk: "AI Chat: Спросить...",
 
   // Prompts
   promptTranslate: (text: string) =>
@@ -69,7 +69,7 @@ export default {
   promptSummarize: (text: string) => `Сделай краткое резюме следующего текста:\n\n${text}`,
 
   // Settings
-  settingsTitle: "Ya GPT — Настройки",
+  settingsTitle: "AI Chat for Obsidian — Настройки",
   settingsSubtitle: "Интеграция с AI прямо в Obsidian",
   sectionProvider: "🤖 AI Провайдер",
   sectionGeneration: "⚙️ Параметры генерации",

@@ -1,7 +1,7 @@
 {
   "name": "obsidian-ya-gpt",
   "version": "1.0.0",
-  "description": "YandexGPT AI assistant for Obsidian",
+  "description": "AI Chat for Obsidian — multi-provider AI assistant",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

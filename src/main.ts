@@ -18,7 +18,7 @@ export default class YaGptPlugin extends Plugin {
     addIcon("ya-gpt", YA_GPT_ICON);
     this.registerView(CHAT_VIEW_TYPE, (leaf) => new ChatView(leaf, this));
 
-    this.addRibbonIcon("bot", "Ya GPT — Открыть чат", async () => {
+    this.addRibbonIcon("bot", "AI Chat for Obsidian", async () => {
       await this.activateChatView();
     });
 
@@ -45,13 +45,13 @@ export default class YaGptPlugin extends Plugin {
     // Commands
     this.addCommand({
       id: "open-chat",
-      name: "Открыть чат Ya GPT",
+      name: "Открыть чат AI Chat",
       callback: async () => { await this.activateChatView(); },
     });
 
     this.addCommand({
       id: "summarize-note",
-      name: "Резюме текущей заметки через Ya GPT",
+      name: "Резюме текущей заметки через AI Chat",
       editorCallback: async (editor) => {
         const text = editor.getSelection() || editor.getValue();
         await this.sendToChat(`Сделай краткое резюме следующего текста:\n\n${text.slice(0, 3000)}`);
@@ -60,7 +60,7 @@ export default class YaGptPlugin extends Plugin {
 
     this.addCommand({
       id: "improve-writing",
-      name: "Улучшить выделенный текст через Ya GPT",
+      name: "Улучшить выделенный текст через AI Chat",
       editorCallback: async (editor) => {
         const sel = editor.getSelection();
         if (!sel) return;
@@ -70,7 +70,7 @@ export default class YaGptPlugin extends Plugin {
 
     this.addCommand({
       id: "translate-selection",
-      name: "Перевести выделенное через Ya GPT",
+      name: "Перевести выделенное через AI Chat",
       editorCallback: async (editor) => {
         const sel = editor.getSelection();
         if (!sel) return;
