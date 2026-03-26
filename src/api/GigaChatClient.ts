@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { AIClient, AIMessage, AIResponse } from "./types";
 
 interface GigaChatToken {
@@ -40,8 +41,6 @@ export class GigaChatClient implements AIClient {
       return this.cachedToken.access_token;
     }
 
-    const { requestUrl } = require("obsidian");
-
     const response = await requestUrl({
       url: GigaChatClient.AUTH_URL,
       method: "POST",
@@ -73,7 +72,6 @@ export class GigaChatClient implements AIClient {
     if (!this.authKey) throw new Error("GigaChat: Authorization Key не задан.");
 
     const token = await this.getToken();
-    const { requestUrl } = require("obsidian");
 
     // GigaChat doesn't support system role in some versions — merge into first user message
     const gigaMessages = this.convertMessages(messages);

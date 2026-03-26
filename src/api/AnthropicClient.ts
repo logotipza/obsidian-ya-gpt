@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { AIClient, AIMessage, AIResponse } from "./types";
 
 export class AnthropicClient implements AIClient {
@@ -19,8 +20,6 @@ export class AnthropicClient implements AIClient {
   }
 
   async complete(messages: AIMessage[]): Promise<AIResponse> {
-    const { requestUrl } = require("obsidian");
-
     // Anthropic separates system prompt from messages
     const systemMsg = messages.find((m) => m.role === "system");
     const chatMessages = messages

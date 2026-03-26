@@ -1,4 +1,4 @@
-import { ItemView, WorkspaceLeaf, MarkdownRenderer, Notice, setIcon, Editor } from "obsidian";
+import { App, ItemView, WorkspaceLeaf, MarkdownRenderer, Notice, setIcon, Editor, MarkdownView } from "obsidian";
 import type YaGptPlugin from "../main";
 import { AIMessage as ChatMessage } from "../api/types";
 import { createAIClient } from "../api/factory";
@@ -44,25 +44,27 @@ export class ChatView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Smart Vault Chat";
+    return "Smart vault chat";
   }
 
   getIcon(): string {
     return "bot";
   }
 
-  async onOpen(): Promise<void> {
+  onOpen(): Promise<void> {
     this.buildUI();
     if (this.plugin.settings.saveHistory) {
       this.loadHistory();
     }
     this.scrollToBottom();
+    return Promise.resolve();
   }
 
   private get t() { return getT(); }
 
-  async onClose(): Promise<void> {
+  onClose(): Promise<void> {
     this.abortController?.abort();
+    return Promise.resolve();
   }
 
   private buildUI(): void {
@@ -78,7 +80,7 @@ export class ChatView extends ItemView {
     logo.createEl("span", { text: "Я", cls: "yagpt-logo-letter" });
 
     const titleBlock = headerLeft.createDiv("yagpt-header-title-block");
-    titleBlock.createEl("span", { text: "Smart Vault Chat", cls: "yagpt-header-title" });
+    titleBlock.createEl("span", { text: "Smart vault chat", cls: "yagpt-header-title" });
     this.modelBadge = titleBlock.createEl("span", { cls: "yagpt-model-badge" });
     this.updateModelBadge();
 
@@ -91,15 +93,16 @@ export class ChatView extends ItemView {
     });
     setIcon(vaultBtn, "database");
     vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
-    vaultBtn.addEventListener("click", async () => {
+    vaultBtn.addEventListener("click", () => {
       this.plugin.settings.vaultSearchEnabled = !this.plugin.settings.vaultSearchEnabled;
       if (this.plugin.settings.vaultSearchEnabled) {
         this.plugin.settings.includeNoteContext = false;
         noteCtxBtn.toggleClass("yagpt-active", false);
       }
       vaultBtn.toggleClass("yagpt-active", this.plugin.settings.vaultSearchEnabled);
-      await this.plugin.saveSettings();
-      new Notice(this.plugin.settings.vaultSearchEnabled ? this.t.vaultEnabled : this.t.vaultDisabled);
+      void this.plugin.saveSettings().then(() => {
+        new Notice(this.plugin.settings.vaultSearchEnabled ? this.t.vaultEnabled : this.t.vaultDisabled);
+      });
     });
 
     // Include note toggle button
@@ -109,15 +112,16 @@ export class ChatView extends ItemView {
     });
     setIcon(noteCtxBtn, "file-text");
     noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
-    noteCtxBtn.addEventListener("click", async () => {
+    noteCtxBtn.addEventListener("click", () => {
       this.plugin.settings.includeNoteContext = !this.plugin.settings.includeNoteContext;
       if (this.plugin.settings.includeNoteContext) {
         this.plugin.settings.vaultSearchEnabled = false;
         vaultBtn.toggleClass("yagpt-active", false);
       }
       noteCtxBtn.toggleClass("yagpt-active", this.plugin.settings.includeNoteContext);
-      await this.plugin.saveSettings();
-      new Notice(this.plugin.settings.includeNoteContext ? this.t.noteContextEnabled : this.t.noteContextDisabled);
+      void this.plugin.saveSettings().then(() => {
+        new Notice(this.plugin.settings.includeNoteContext ? this.t.noteContextEnabled : this.t.noteContextDisabled);
+      });
     });
 
     // New chat button
@@ -135,8 +139,9 @@ export class ChatView extends ItemView {
     });
     setIcon(settingsBtn, "settings");
     settingsBtn.addEventListener("click", () => {
-      (this.app as any).setting.open();
-      (this.app as any).setting.openTabById("ya-gpt");
+      const appWithSetting = this.app as App & { setting: { open: () => void; openTabById: (id: string) => void } };
+      appWithSetting.setting.open();
+      appWithSetting.setting.openTabById("ya-gpt");
     });
 
     // Messages area
@@ -147,7 +152,7 @@ export class ChatView extends ItemView {
 
     // Status bar
     this.statusBar = root.createDiv("yagpt-status-bar");
-    this.statusBar.style.display = "none";
+    this.statusBar.hide();
 
     // Input area
     const inputArea = root.createDiv("yagpt-input-area");
@@ -156,7 +161,7 @@ export class ChatView extends ItemView {
 
     // Note context indicator
     const ctxIndicator = inputWrapper.createDiv("yagpt-ctx-indicator");
-    ctxIndicator.style.display = "none";
+    ctxIndicator.hide();
 
     this.inputEl = inputWrapper.createEl("textarea", {
       cls: "yagpt-textarea",
@@ -168,19 +173,19 @@ export class ChatView extends ItemView {
 
     // Auto-resize textarea
     this.inputEl.addEventListener("input", () => {
-      this.inputEl.style.height = "auto";
-      this.inputEl.style.height = Math.min(this.inputEl.scrollHeight, 200) + "px";
+      this.inputEl.setCssProps({ height: "auto" });
+      this.inputEl.setCssProps({ height: Math.min(this.inputEl.scrollHeight, 200) + "px" });
     });
 
     // Send on Ctrl+Enter or Cmd+Enter
     this.inputEl.addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        this.handleSend();
+        void this.handleSend();
       }
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        this.handleSend();
+        void this.handleSend();
       }
     });
 
@@ -188,14 +193,15 @@ export class ChatView extends ItemView {
 
     this.stopBtn = btnGroup.createEl("button", {
       cls: "yagpt-stop-btn",
-      attr: { title: this.t.btnStop, style: "display:none" },
+      attr: { title: this.t.btnStop },
     });
+    this.stopBtn.hide();
     setIcon(this.stopBtn, "square");
     this.stopBtn.addEventListener("click", () => this.stopGeneration());
 
     this.sendBtn = btnGroup.createEl("button", { cls: "yagpt-send-btn", attr: { title: this.t.btnSend } });
     setIcon(this.sendBtn, "send");
-    this.sendBtn.addEventListener("click", () => this.handleSend());
+    this.sendBtn.addEventListener("click", () => { void this.handleSend(); });
 
     // Footer hint
     const hint = inputArea.createDiv("yagpt-input-hint");
@@ -208,7 +214,7 @@ export class ChatView extends ItemView {
     const welcome = this.messagesContainer.createDiv("yagpt-welcome");
     const logo = welcome.createDiv("yagpt-welcome-logo");
     logo.createEl("span", { text: "Я", cls: "yagpt-welcome-logo-letter" });
-    welcome.createEl("h2", { text: "Smart Vault Chat", cls: "yagpt-welcome-title" });
+    welcome.createEl("h2", { text: "Smart vault chat", cls: "yagpt-welcome-title" });
     welcome.createEl("p", { text: this.t.welcomeSubtitle, cls: "yagpt-welcome-subtitle" });
 
     const suggestions = welcome.createDiv("yagpt-suggestions");
@@ -247,8 +253,9 @@ export class ChatView extends ItemView {
     if (!text || this.isLoading) return;
     if (!this.plugin.settings.apiKey && this.plugin.settings.provider === "yandex") {
       new Notice(this.t.errNoApiKey);
-      (this.app as any).setting.open();
-      (this.app as any).setting.openTabById("ya-gpt");
+      const appWithSetting = this.app as App & { setting: { open: () => void; openTabById: (id: string) => void } };
+      appWithSetting.setting.open();
+      appWithSetting.setting.openTabById("ya-gpt");
       return;
     }
 
@@ -256,7 +263,7 @@ export class ChatView extends ItemView {
     this.messagesContainer.find(".yagpt-welcome")?.remove();
 
     this.inputEl.value = "";
-    this.inputEl.style.height = "auto";
+    this.inputEl.setCssProps({ height: "auto" });
 
     // Add user message
     const userMsg: StoredMessage = { role: "user", content: text, timestamp: Date.now() };
@@ -456,7 +463,7 @@ export class ChatView extends ItemView {
     const contentEl = bubble.createDiv("yagpt-msg-content");
     if (msg.content) {
       if (msg.role === "assistant") {
-        MarkdownRenderer.render(this.app, msg.content, contentEl, "", this);
+        void MarkdownRenderer.render(this.app, msg.content, contentEl, "", this);
       } else {
         contentEl.setText(msg.content);
       }
@@ -468,16 +475,17 @@ export class ChatView extends ItemView {
 
       const copyBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: this.t.msgCopy } });
       setIcon(copyBtn, "copy");
-      copyBtn.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(msg.content);
-        new Notice(this.t.msgCopied);
-        setIcon(copyBtn, "check");
-        setTimeout(() => setIcon(copyBtn, "copy"), 2000);
+      copyBtn.addEventListener("click", () => {
+        void navigator.clipboard.writeText(msg.content).then(() => {
+          new Notice(this.t.msgCopied);
+          setIcon(copyBtn, "check");
+          setTimeout(() => setIcon(copyBtn, "copy"), 2000);
+        });
       });
 
       const insertBtn = actions.createEl("button", { cls: "yagpt-action-btn", attr: { title: this.t.msgInsert } });
       setIcon(insertBtn, "file-plus");
-      insertBtn.addEventListener("click", () => this.insertIntoNote(msg.content));
+      insertBtn.addEventListener("click", () => { void this.insertIntoNote(msg.content); });
 
       const timeEl = actions.createEl("span", { cls: "yagpt-msg-time" });
       timeEl.setText(this.formatTime(msg.timestamp));
@@ -531,16 +539,15 @@ export class ChatView extends ItemView {
       link.createEl("span", { text: name, cls: "yagpt-source-name" });
       link.setAttribute("title", path);
       link.addEventListener("click", () => {
-        this.app.workspace.openLinkText(path, "", false);
+        void this.app.workspace.openLinkText(path, "", false);
       });
     }
   }
 
   private async insertIntoNote(text: string): Promise<void> {
-    const { MarkdownView } = require("obsidian");
     const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (activeView) {
-      const editor = (activeView as any).editor;
+      const editor = activeView.editor;
       const cursor = editor.getCursor();
       editor.replaceRange("\n" + text + "\n", cursor);
       new Notice(this.t.msgInserted);
@@ -552,8 +559,8 @@ export class ChatView extends ItemView {
 
   private setLoading(loading: boolean): void {
     this.isLoading = loading;
-    this.sendBtn.style.display = loading ? "none" : "";
-    this.stopBtn.style.display = loading ? "" : "none";
+    if (loading) { this.sendBtn.hide(); this.stopBtn.show(); }
+    else { this.sendBtn.show(); this.stopBtn.hide(); }
     this.inputEl.disabled = loading;
 
     if (loading) {
@@ -633,7 +640,7 @@ export class ChatView extends ItemView {
           link.textContent = filename;
           link.title = foundPath;
           link.addEventListener("click", () => {
-            this.app.workspace.openLinkText(foundPath, "", false);
+            void this.app.workspace.openLinkText(foundPath, "", false);
           });
           parts.push(link);
           if (closeQuote) parts.push(closeQuote);
@@ -714,11 +721,11 @@ export class ChatView extends ItemView {
 
   private showStatus(text: string): void {
     if (!text) {
-      this.statusBar.style.display = "none";
+      this.statusBar.hide();
       return;
     }
     this.statusBar.setText(text);
-    this.statusBar.style.display = "";
+    this.statusBar.show();
   }
 
   private scrollToBottom(): void {
@@ -732,14 +739,12 @@ export class ChatView extends ItemView {
   }
 
   private saveHistory(): void {
-    const key = "ya-gpt-history";
     const data = this.messages.slice(-50); // keep last 50
-    localStorage.setItem(key, JSON.stringify(data));
+    this.app.saveLocalStorage("ya-gpt-history", JSON.stringify(data));
   }
 
   private loadHistory(): void {
-    const key = "ya-gpt-history";
-    const raw = localStorage.getItem(key);
+    const raw = this.app.loadLocalStorage("ya-gpt-history");
     if (!raw) return;
     try {
       const data: StoredMessage[] = JSON.parse(raw);
@@ -767,6 +772,6 @@ export class ChatView extends ItemView {
 
   // Programmatically send the current input
   triggerSend(): void {
-    this.handleSend();
+    void this.handleSend();
   }
 }

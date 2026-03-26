@@ -11,7 +11,7 @@ export type Translations = {
 function detectLocale(): string {
   // Obsidian sets moment locale to match app language
   try {
-    const momentLocale = (window as any).moment?.locale?.();
+    const momentLocale = (window as Window & { moment?: { locale?: () => string } }).moment?.locale?.();
     if (momentLocale) return momentLocale;
   } catch { /* ignore */ }
   // Fallback: check html lang attribute

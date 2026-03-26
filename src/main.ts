@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, addIcon, Editor, MarkdownView, Menu } from "obsidian";
+import { Plugin, addIcon, Editor, MarkdownView, Menu } from "obsidian";
 import { YaGptSettings, DEFAULT_SETTINGS, YaGptSettingTab } from "./settings";
 import { ChatView, CHAT_VIEW_TYPE } from "./views/ChatView";
 import { getT } from "./i18n";
@@ -18,7 +18,7 @@ export default class YaGptPlugin extends Plugin {
     addIcon("ya-gpt", YA_GPT_ICON);
     this.registerView(CHAT_VIEW_TYPE, (leaf) => new ChatView(leaf, this));
 
-    this.addRibbonIcon("bot", "Smart Vault Chat", async () => {
+    this.addRibbonIcon("bot", "Smart vault chat", async () => {
       await this.activateChatView();
     });
 
@@ -45,13 +45,13 @@ export default class YaGptPlugin extends Plugin {
     // Commands
     this.addCommand({
       id: "open-chat",
-      name: "Открыть чат AI Chat",
+      name: "Open chat",
       callback: async () => { await this.activateChatView(); },
     });
 
     this.addCommand({
       id: "summarize-note",
-      name: "Резюме текущей заметки через AI Chat",
+      name: "Summarize current note",
       editorCallback: async (editor) => {
         const text = editor.getSelection() || editor.getValue();
         await this.sendToChat(`Сделай краткое резюме следующего текста:\n\n${text.slice(0, 3000)}`);
@@ -60,7 +60,7 @@ export default class YaGptPlugin extends Plugin {
 
     this.addCommand({
       id: "improve-writing",
-      name: "Улучшить выделенный текст через AI Chat",
+      name: "Improve selected text",
       editorCallback: async (editor) => {
         const sel = editor.getSelection();
         if (!sel) return;
@@ -70,7 +70,7 @@ export default class YaGptPlugin extends Plugin {
 
     this.addCommand({
       id: "translate-selection",
-      name: "Перевести выделенное через AI Chat",
+      name: "Translate selection",
       editorCallback: async (editor) => {
         const sel = editor.getSelection();
         if (!sel) return;
@@ -82,7 +82,7 @@ export default class YaGptPlugin extends Plugin {
   }
 
   onunload(): void {
-    this.app.workspace.detachLeavesOfType(CHAT_VIEW_TYPE);
+    // intentionally left empty
   }
 
   private async handleInlineAction(
@@ -137,7 +137,7 @@ export default class YaGptPlugin extends Plugin {
   getChatView(): ChatView | null {
     const leaves = this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE);
     if (leaves.length > 0 && leaves[0].view instanceof ChatView) {
-      return leaves[0].view as ChatView;
+      return leaves[0].view;
     }
     return null;
   }
@@ -154,13 +154,13 @@ export default class YaGptPlugin extends Plugin {
   async activateChatView(): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(CHAT_VIEW_TYPE);
     if (existing.length > 0) {
-      this.app.workspace.revealLeaf(existing[0]);
+      void this.app.workspace.revealLeaf(existing[0]);
       return;
     }
     const leaf = this.app.workspace.getRightLeaf(false);
     if (leaf) {
       await leaf.setViewState({ type: CHAT_VIEW_TYPE, active: true });
-      this.app.workspace.revealLeaf(leaf);
+      void this.app.workspace.revealLeaf(leaf);
     }
   }
 }

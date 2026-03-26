@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { AIClient, AIMessage, AIResponse } from "./types";
 
 export class OpenAICompatClient implements AIClient {
@@ -22,8 +23,6 @@ export class OpenAICompatClient implements AIClient {
   }
 
   async complete(messages: AIMessage[]): Promise<AIResponse> {
-    const { requestUrl } = require("obsidian");
-
     const response = await requestUrl({
       url: `${this.baseUrl}/chat/completions`,
       method: "POST",

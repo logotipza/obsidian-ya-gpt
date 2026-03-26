@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { AIClient, AIMessage, AIResponse } from "./types";
 
 export interface YandexAISettings {
@@ -63,7 +64,6 @@ export class YandexAIClient implements AIClient {
 
   async complete(messages: AIMessage[]): Promise<AIResponse> {
     if (!this.settings.apiKey) throw new Error("API ключ не задан.");
-    const { requestUrl } = require("obsidian");
 
     const body = {
       modelUri: this.getModelUri(),

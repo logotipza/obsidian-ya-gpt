@@ -84,7 +84,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     containerEl.addClass("yagpt-settings-container");
 
     const header = containerEl.createDiv("yagpt-settings-header");
-    header.createEl("h1", { text: t.settingsTitle });
+    new Setting(header).setName(t.settingsTitle).setHeading();
     header.createEl("p", { text: t.settingsSubtitle, cls: "yagpt-settings-subtitle" });
 
     this.addSection(containerEl, t.sectionProvider);
@@ -128,8 +128,7 @@ export class YaGptSettingTab extends PluginSettingTab {
         text.setValue(this.plugin.settings.systemPrompt)
           .onChange(async (v) => { this.plugin.settings.systemPrompt = v; await this.plugin.saveSettings(); });
         text.inputEl.rows = 5;
-        text.inputEl.style.width = "100%";
-        text.inputEl.style.resize = "vertical";
+        text.inputEl.setCssProps({ width: "100%", resize: "vertical" });
       });
 
     this.addSection(containerEl, t.sectionVault);
@@ -293,7 +292,6 @@ export class YaGptSettingTab extends PluginSettingTab {
   }
 
   private addSection(container: HTMLElement, title: string): void {
-    container.createDiv("yagpt-settings-section")
-      .createEl("h3", { text: title, cls: "yagpt-settings-section-title" });
+    new Setting(container).setName(title).setHeading();
   }
 }
