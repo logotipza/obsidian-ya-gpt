@@ -44,7 +44,7 @@ export class ChatView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "AI Chat";
+    return "Smart Vault Chat";
   }
 
   getIcon(): string {
@@ -78,7 +78,7 @@ export class ChatView extends ItemView {
     logo.createEl("span", { text: "Я", cls: "yagpt-logo-letter" });
 
     const titleBlock = headerLeft.createDiv("yagpt-header-title-block");
-    titleBlock.createEl("span", { text: "AI Chat", cls: "yagpt-header-title" });
+    titleBlock.createEl("span", { text: "Smart Vault Chat", cls: "yagpt-header-title" });
     this.modelBadge = titleBlock.createEl("span", { cls: "yagpt-model-badge" });
     this.updateModelBadge();
 
@@ -208,7 +208,7 @@ export class ChatView extends ItemView {
     const welcome = this.messagesContainer.createDiv("yagpt-welcome");
     const logo = welcome.createDiv("yagpt-welcome-logo");
     logo.createEl("span", { text: "Я", cls: "yagpt-welcome-logo-letter" });
-    welcome.createEl("h2", { text: "AI Chat", cls: "yagpt-welcome-title" });
+    welcome.createEl("h2", { text: "Smart Vault Chat", cls: "yagpt-welcome-title" });
     welcome.createEl("p", { text: this.t.welcomeSubtitle, cls: "yagpt-welcome-subtitle" });
 
     const suggestions = welcome.createDiv("yagpt-suggestions");

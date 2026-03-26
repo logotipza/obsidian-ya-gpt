@@ -18,7 +18,7 @@ export default class YaGptPlugin extends Plugin {
     addIcon("ya-gpt", YA_GPT_ICON);
     this.registerView(CHAT_VIEW_TYPE, (leaf) => new ChatView(leaf, this));
 
-    this.addRibbonIcon("bot", "AI Chat for Obsidian", async () => {
+    this.addRibbonIcon("bot", "Smart Vault Chat", async () => {
       await this.activateChatView();
     });
 
