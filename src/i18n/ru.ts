@@ -92,7 +92,7 @@ export default {
   settingHistoryLengthDesc: "Сколько последних сообщений передавать в контекст",
   settingTokens: "Показывать токены",
 
-  settingApiKey: "API Ключ",
+  settingApiKey: "API ключ",
   settingFolderId: "Folder ID",
   settingFolderIdDesc: "ID каталога в Яндекс Облаке",
   settingModel: "Модель",
@@ -131,7 +131,7 @@ export default {
   gigachatStep2: "Создайте проект и подключите GigaChat API",
   gigachatStep3: "В разделе «Авторизационные данные» скопируйте Authorization Key",
   gigachatStep4: "Вставьте ключ сюда",
-  gigachatAuthKeyLabel: "Authorization Key",
+  gigachatAuthKeyLabel: "Authorization key",
   gigachatAuthKeyDesc: "Ключ из раздела авторизационных данных вашего проекта на developers.sber.ru",
 
   // System prompt default

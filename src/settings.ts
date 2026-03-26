@@ -156,7 +156,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     this.addSection(containerEl, t.sectionYandex);
     containerEl.createDiv("yagpt-settings-info").createEl("p", { text: t.yandexInfo });
     new Setting(containerEl).setName(t.settingApiKey).addText((tx) => {
-      tx.setPlaceholder("AQVN...").setValue(this.plugin.settings.apiKey)
+      tx.setPlaceholder("aqvn...").setValue(this.plugin.settings.apiKey)
         .onChange(async (v) => { this.plugin.settings.apiKey = v.trim(); await this.plugin.saveSettings(); });
       tx.inputEl.type = "password";
     }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {

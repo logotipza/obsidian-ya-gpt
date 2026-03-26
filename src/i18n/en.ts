@@ -92,7 +92,7 @@ export default {
   settingHistoryLengthDesc: "How many recent messages to send as context",
   settingTokens: "Show token count",
 
-  settingApiKey: "API Key",
+  settingApiKey: "API key",
   settingFolderId: "Folder ID",
   settingFolderIdDesc: "Yandex Cloud folder ID",
   settingModel: "Model",
@@ -131,7 +131,7 @@ export default {
   gigachatStep2: "Create a project and connect GigaChat API",
   gigachatStep3: "In the Authorization Data section, copy the Authorization Key",
   gigachatStep4: "Paste the key here",
-  gigachatAuthKeyLabel: "Authorization Key",
+  gigachatAuthKeyLabel: "Authorization key",
   gigachatAuthKeyDesc: "Key from the authorization data section of your project at developers.sber.ru",
 
   // System prompt default
