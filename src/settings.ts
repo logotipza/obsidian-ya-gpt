@@ -156,7 +156,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     this.addSection(containerEl, t.sectionYandex);
     containerEl.createDiv("yagpt-settings-info").createEl("p", { text: t.yandexInfo });
     new Setting(containerEl).setName(t.settingApiKey).addText((tx) => {
-      tx.setPlaceholder("aqvn...").setValue(this.plugin.settings.apiKey)
+      tx.setPlaceholder("").setValue(this.plugin.settings.apiKey)
         .onChange(async (v) => { this.plugin.settings.apiKey = v.trim(); await this.plugin.saveSettings(); });
       tx.inputEl.type = "password";
     }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
@@ -168,7 +168,7 @@ export class YaGptSettingTab extends PluginSettingTab {
       finally { b.setButtonText(t.btnTest); b.setDisabled(false); }
     }));
     new Setting(containerEl).setName(t.settingFolderId).setDesc(t.settingFolderIdDesc)
-      .addText((tx) => tx.setPlaceholder("b1g...").setValue(this.plugin.settings.folderId)
+      .addText((tx) => tx.setPlaceholder("").setValue(this.plugin.settings.folderId)
         .onChange(async (v) => { this.plugin.settings.folderId = v.trim(); await this.plugin.saveSettings(); }));
     new Setting(containerEl).setName(t.settingModel).addDropdown((d) => {
       for (const m of YANDEX_MODELS) d.addOption(m.id, m.name);
@@ -186,7 +186,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     const steps = info.createEl("ol", { cls: "yagpt-settings-steps" });
     [t.groqStep1, t.groqStep2, t.groqStep3, t.groqStep4].forEach((s) => steps.createEl("li", { text: s }));
     new Setting(containerEl).setName(t.settingApiKey).addText((tx) => {
-      tx.setPlaceholder("gsk_...").setValue(this.plugin.settings.groqApiKey)
+      tx.setPlaceholder("").setValue(this.plugin.settings.groqApiKey)
         .onChange(async (v) => { this.plugin.settings.groqApiKey = v.trim(); await this.plugin.saveSettings(); });
       tx.inputEl.type = "password";
     }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
@@ -210,7 +210,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     containerEl.createDiv("yagpt-settings-info").createEl("p")
       .createEl("a", { text: t.openaiLink, href: "https://platform.openai.com/api-keys", attr: { target: "_blank" } });
     new Setting(containerEl).setName(t.settingApiKey).addText((tx) => {
-      tx.setPlaceholder("sk-...").setValue(this.plugin.settings.openaiApiKey)
+      tx.setPlaceholder("").setValue(this.plugin.settings.openaiApiKey)
         .onChange(async (v) => { this.plugin.settings.openaiApiKey = v.trim(); await this.plugin.saveSettings(); });
       tx.inputEl.type = "password";
     }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
@@ -237,7 +237,7 @@ export class YaGptSettingTab extends PluginSettingTab {
     containerEl.createDiv("yagpt-settings-info").createEl("p")
       .createEl("a", { text: t.anthropicLink, href: "https://console.anthropic.com", attr: { target: "_blank" } });
     new Setting(containerEl).setName(t.settingApiKey).addText((tx) => {
-      tx.setPlaceholder("sk-ant-...").setValue(this.plugin.settings.anthropicApiKey)
+      tx.setPlaceholder("").setValue(this.plugin.settings.anthropicApiKey)
         .onChange(async (v) => { this.plugin.settings.anthropicApiKey = v.trim(); await this.plugin.saveSettings(); });
       tx.inputEl.type = "password";
     }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
@@ -272,7 +272,7 @@ export class YaGptSettingTab extends PluginSettingTab {
 
     new Setting(containerEl).setName(t.gigachatAuthKeyLabel).setDesc(t.gigachatAuthKeyDesc)
       .addText((tx) => {
-        tx.setPlaceholder("base64...").setValue(this.plugin.settings.gigachatAuthKey)
+        tx.setPlaceholder("").setValue(this.plugin.settings.gigachatAuthKey)
           .onChange(async (v) => { this.plugin.settings.gigachatAuthKey = v.trim(); await this.plugin.saveSettings(); });
         tx.inputEl.type = "password";
       }).addButton((b) => b.setButtonText(t.btnTest).onClick(async () => {
