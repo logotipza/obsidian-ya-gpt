@@ -1,6 +1,6 @@
 {
   "name": "obsidian-ya-gpt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI Chat for Obsidian — multi-provider AI assistant",
   "main": "main.js",
   "scripts": {

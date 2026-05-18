@@ -1,7 +1,7 @@
 {
   "id": "ya-gpt",
   "name": "Smart Vault Chat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.4.0",
   "description": "AI assistant with multi-provider support: Yandex AI Studio, Groq, OpenAI, Anthropic, GigaChat. Chat panel, vault search, inline text editing.",
   "author": "logotipza",
